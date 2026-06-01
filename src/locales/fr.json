@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "primary": "Navigation principale",
+    "dashboard": "Accueil",
+    "income": "Revenu",
+    "goals": "Objectifs",
+    "debts": "Dettes"
+  },
+  "dashboard": {
+    "eyebrow": "Rituel d'arrivée d'argent",
+    "title": "Sachez où chaque dollar doit aller avant qu'il arrive.",
+    "subtitle": "Loop commence par la répartition, pas par le suivi des dépenses. Cette première base prépare l'application mobile pour le flux d'arrivée d'argent.",
+    "logIncome": "Ajouter un revenu",
+    "setGoals": "Créer des objectifs",
+    "incomeThisMonth": "Revenu ce mois-ci",
+    "allocated": "Réparti",
+    "remaining": "Restant",
+    "healthScore": "Score financier",
+    "allocationPlan": "Exemple de répartition"
+  },
+  "income": {
+    "title": "Ajouter un revenu",
+    "subtitle": "Ce formulaire deviendra le déclencheur de l'écran de répartition.",
+    "amount": "Montant reçu",
+    "source": "Source du revenu",
+    "profile": "Profil de revenu",
+    "continue": "Continuer vers la répartition",
+    "profiles": {
+      "monthly": "Mensuel",
+      "biweekly": "Toutes les deux semaines",
+      "weekly": "Hebdomadaire",
+      "project": "Par projet",
+      "mixed": "Mixte"
+    }
+  },
+  "goals": {
+    "title": "Objectifs",
+    "subtitle": "Affectations futures comme fonds d'urgence, fonds d'entreprise, études, voyage ou boutique.",
+    "empty": "La gestion des objectifs commence ici."
+  },
+  "debts": {
+    "title": "Dettes",
+    "subtitle": "Suivre le prêteur, le solde, les échéances, la fréquence de paiement et les prévisions de remboursement.",
+    "empty": "La gestion des dettes commence ici."
+  },
+  "onboarding": {
+    "title": "Configurer Loop",
+    "subtitle": "Choisissez le profil de revenu, la langue et la devise avant la première répartition."
+  }
+}

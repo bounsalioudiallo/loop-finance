@@ -1,0 +1,16 @@
+.DS_Store
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.env
+.env.*
+!.env.example
+coverage/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+functions/lib/
+functions/node_modules/
+ios/
+android/

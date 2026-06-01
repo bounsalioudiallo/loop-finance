@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "primary": "Primary navigation",
+    "dashboard": "Home",
+    "income": "Income",
+    "goals": "Goals",
+    "debts": "Debts"
+  },
+  "dashboard": {
+    "eyebrow": "Money arrival ritual",
+    "title": "Know where every dollar should go before it arrives.",
+    "subtitle": "Loop starts with allocation, not expense tracking. This first shell sets up the mobile app foundation for the money arrival workflow.",
+    "logIncome": "Log income",
+    "setGoals": "Set goals",
+    "incomeThisMonth": "Income this month",
+    "allocated": "Allocated",
+    "remaining": "Remaining",
+    "healthScore": "Health score",
+    "allocationPlan": "Sample allocation plan"
+  },
+  "income": {
+    "title": "Log income",
+    "subtitle": "This form will become the trigger for the allocation screen.",
+    "amount": "Amount received",
+    "source": "Income source",
+    "profile": "Income profile",
+    "continue": "Continue to allocation",
+    "profiles": {
+      "monthly": "Monthly",
+      "biweekly": "Biweekly",
+      "weekly": "Weekly",
+      "project": "Project based",
+      "mixed": "Mixed"
+    }
+  },
+  "goals": {
+    "title": "Goals",
+    "subtitle": "Future dollar assignments like emergency fund, business fund, education, travel, or a shop.",
+    "empty": "Goal management starts here."
+  },
+  "debts": {
+    "title": "Debts",
+    "subtitle": "Track lender, balance, due dates, payment frequency, and payoff forecasts.",
+    "empty": "Debt management starts here."
+  },
+  "onboarding": {
+    "title": "Set up Loop",
+    "subtitle": "Choose income pattern, language, and currency before the first allocation."
+  }
+}
