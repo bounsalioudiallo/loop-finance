@@ -27,7 +27,8 @@ const navItems = computed(() => [
   { path: '/income/new', label: t('nav.income'), icon: CircleDollarSign },
 ]);
 
-const showBottomNav = computed(() => route.path !== '/login');
+const showBottomNav = computed(() => route.path !== '/login' && !route.path.startsWith('/debt/share'));
+const showTopActions = computed(() => !route.path.startsWith('/debt/share'));
 
 const drawerItems = computed(() => [
   { path: '/settings', label: t('nav.settings'), description: t('drawer.settings'), icon: Settings },
@@ -59,7 +60,7 @@ function toggleLocale() {
         <span>Loop</span>
       </RouterLink>
 
-      <div class="top-actions">
+      <div v-if="showTopActions" class="top-actions">
         <button class="language-toggle" type="button" @click="toggleLocale">
           {{ locale === 'en' ? 'FR' : 'EN' }}
         </button>

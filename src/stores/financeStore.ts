@@ -18,6 +18,15 @@ interface FinanceState {
   rules: FinancialRule[];
   incomeEvents: IncomeEvent[];
   allocations: AllocationLine[];
+  debtShares: DebtShare[];
+}
+
+export interface DebtShare {
+  id: string;
+  debtId: string;
+  createdAt: string;
+  lenderNote: string;
+  acknowledgedAt?: string;
 }
 
 const storageKey = 'loop-finance-state-v1';
@@ -82,6 +91,7 @@ const defaultState: FinanceState = {
   ],
   incomeEvents: [],
   allocations: [],
+  debtShares: [],
 };
 
 function cloneState(value: FinanceState): FinanceState {
@@ -93,9 +103,16 @@ function loadState() {
 
   if (!saved) return cloneState(defaultState);
 
+  const parsed = JSON.parse(saved) as Partial<FinanceState>;
+
   return {
     ...cloneState(defaultState),
-    ...JSON.parse(saved),
+    ...parsed,
+    settings: {
+      ...cloneState(defaultState).settings,
+      ...parsed.settings,
+    },
+    debtShares: parsed.debtShares || [],
   } as FinanceState;
 }
 
@@ -157,6 +174,7 @@ export function useFinanceStore() {
 
   function removeDebt(debtId: string) {
     state.debts = state.debts.filter((debt) => debt.id !== debtId);
+    state.debtShares = state.debtShares.filter((share) => share.debtId !== debtId);
   }
 
   function removeRule(ruleId: string) {
@@ -179,6 +197,44 @@ export function useFinanceStore() {
 
   function getIncomeEvent(incomeId: string) {
     return state.incomeEvents.find((income) => income.id === incomeId);
+  }
+
+  function getDebt(debtId: string) {
+    return state.debts.find((debt) => debt.id === debtId);
+  }
+
+  function createDebtShare(debtId: string) {
+    const existingShare = state.debtShares.find((share) => share.debtId === debtId);
+
+    if (existingShare) return existingShare;
+
+    const share: DebtShare = {
+      id: id('share'),
+      debtId,
+      createdAt: new Date().toISOString(),
+      lenderNote: '',
+    };
+
+    state.debtShares.push(share);
+    return share;
+  }
+
+  function getDebtShare(shareId: string) {
+    return state.debtShares.find((share) => share.id === shareId);
+  }
+
+  function saveLenderNote(shareId: string, note: string) {
+    const share = getDebtShare(shareId);
+    if (!share) return;
+
+    share.lenderNote = note;
+  }
+
+  function acknowledgeDebtShare(shareId: string) {
+    const share = getDebtShare(shareId);
+    if (!share) return;
+
+    share.acknowledgedAt = new Date().toISOString();
   }
 
   function previewAllocation(incomeId: string) {
@@ -227,6 +283,11 @@ export function useFinanceStore() {
     removeDebt,
     removeRule,
     addIncomeEvent,
+    getDebt,
+    createDebtShare,
+    getDebtShare,
+    saveLenderNote,
+    acknowledgeDebtShare,
     getIncomeEvent,
     previewAllocation,
     approveAllocation,

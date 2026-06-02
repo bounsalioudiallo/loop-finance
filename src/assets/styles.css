@@ -509,6 +509,166 @@ select {
   font-size: 0.85rem;
 }
 
+.share-workbook {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 18px 14px 48px;
+}
+
+.share-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  background: #0f6b4f;
+  border-radius: 8px 8px 0 0;
+  color: #ffffff;
+}
+
+.share-titlebar .secondary-button {
+  color: #14221f;
+  background: #ffffff;
+}
+
+.share-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.share-file strong,
+.share-file span {
+  display: block;
+}
+
+.share-file span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.85rem;
+}
+
+.sheet-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 10px 0;
+  background: #e9efe8;
+  border-right: 1px solid #c8d5ce;
+  border-left: 1px solid #c8d5ce;
+}
+
+.sheet-tabs span {
+  min-width: max-content;
+  padding: 9px 14px;
+  color: #49625a;
+  background: #dfe8e2;
+  border: 1px solid #c8d5ce;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.sheet-tabs .active {
+  color: #14221f;
+  background: #ffffff;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: 42px repeat(4, minmax(148px, 1fr));
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #c8d5ce;
+  border-top: 0;
+  box-shadow: 0 18px 46px rgba(20, 34, 31, 0.08);
+}
+
+@media (max-width: 520px) {
+  .share-workbook {
+    padding: 12px 10px 42px;
+  }
+
+  .share-titlebar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .share-titlebar .secondary-button {
+    align-self: flex-start;
+  }
+
+  .sheet-grid {
+    grid-template-columns: 36px repeat(4, minmax(116px, 1fr));
+  }
+
+  .sheet-corner,
+  .sheet-column,
+  .sheet-row-number,
+  .sheet-cell,
+  .sheet-header-cell,
+  .sheet-section-cell {
+    min-height: 38px;
+    padding: 9px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+.sheet-corner,
+.sheet-column,
+.sheet-row-number,
+.sheet-cell,
+.sheet-header-cell,
+.sheet-section-cell {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-top: 1px solid #d9e2dc;
+  border-left: 1px solid #d9e2dc;
+  font-size: 0.88rem;
+}
+
+.sheet-corner,
+.sheet-column,
+.sheet-row-number {
+  color: #49625a;
+  background: #f0f5f1;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sheet-label,
+.sheet-header-cell,
+.sheet-section-cell {
+  font-weight: 900;
+}
+
+.sheet-section-cell {
+  color: #ffffff;
+  background: #176b5c;
+}
+
+.sheet-header-cell {
+  background: #e8f2ee;
+}
+
+.share-actions-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.share-actions-grid .primary-button,
+.share-actions-grid .secondary-button,
+.share-titlebar .secondary-button {
+  gap: 8px;
+}
+
+@media (min-width: 760px) {
+  .share-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 760px) {
   .screen {
     padding-top: 42px;

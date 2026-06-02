@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
+const router = useRouter();
 const store = useFinanceStore();
 
 const form = reactive({
@@ -37,6 +39,11 @@ function addDebt() {
   });
 
   form.lender = '';
+}
+
+function openSharePortal(debtId: string) {
+  const share = store.createDebtShare(debtId);
+  router.push(`/debt/share/${share.id}`);
 }
 </script>
 
@@ -94,6 +101,11 @@ function addDebt() {
           </div>
           <div class="progress">
             <span :style="{ display: 'block', width: `${Math.min(100, (1 - debt.remainingAmount / debt.originalAmount) * 100)}%` }" />
+          </div>
+          <div class="actions">
+            <button class="secondary-button" type="button" @click="openSharePortal(debt.id)">
+              {{ t('debts.share') }}
+            </button>
           </div>
         </div>
       </div>
