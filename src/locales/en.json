@@ -154,6 +154,7 @@
   },
   "share": {
     "workbookTitle": "Debt Transparency Workbook",
+    "statementTitle": "Debt Transparency Statement",
     "readOnly": "read-only lender view",
     "copyLink": "Copy link",
     "copied": "Copied",
@@ -175,6 +176,8 @@
     "awaitingAck": "Awaiting acknowledgement",
     "acknowledged": "Acknowledged",
     "paymentLedger": "Payment Ledger",
+    "rows": "rows",
+    "paidBack": "paid back",
     "date": "Date",
     "type": "Type",
     "amount": "Amount",

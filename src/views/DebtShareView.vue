@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { CheckCircle2, Copy, FileSpreadsheet } from '@lucide/vue';
+import { CheckCircle2, Copy, FileText } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import { useFinanceStore } from '@/stores/financeStore';
 
@@ -67,15 +67,18 @@ const paymentRows = computed(() => {
   ];
 });
 
-const workbookRows = computed(() => {
+const detailRows = computed(() => {
   if (!debt.value || !share.value) return [];
 
   return [
-    [t('share.originalAmount'), money.value.format(debt.value.originalAmount), t('share.lender'), debt.value.lender],
-    [t('share.remainingBalance'), money.value.format(debt.value.remainingAmount), t('share.progress'), `${progress.value}%`],
-    [t('share.minimumPayment'), money.value.format(debt.value.minimumPayment), t('share.dueDay'), `${debt.value.dueDay}`],
-    [t('share.interestRate'), `${debt.value.interestRate}%`, t('share.forecast'), `${payoffMonths.value} ${t('share.months')}`],
-    [t('share.shareCreated'), new Date(share.value.createdAt).toLocaleDateString(locale.value), t('share.status'), share.value.acknowledgedAt ? t('share.acknowledged') : t('share.awaitingAck')],
+    { label: t('share.originalAmount'), value: money.value.format(debt.value.originalAmount) },
+    { label: t('share.remainingBalance'), value: money.value.format(debt.value.remainingAmount) },
+    { label: t('share.minimumPayment'), value: money.value.format(debt.value.minimumPayment) },
+    { label: t('share.dueDay'), value: `${debt.value.dueDay}` },
+    { label: t('share.interestRate'), value: `${debt.value.interestRate}%` },
+    { label: t('share.forecast'), value: `${payoffMonths.value} ${t('share.months')}` },
+    { label: t('share.shareCreated'), value: new Date(share.value.createdAt).toLocaleDateString(locale.value) },
+    { label: t('share.status'), value: share.value.acknowledgedAt ? t('share.acknowledged') : t('share.awaitingAck') },
   ];
 });
 
@@ -105,9 +108,9 @@ function saveNote() {
   <main v-if="debt && share" class="share-workbook">
     <section class="share-titlebar">
       <div class="share-file">
-        <FileSpreadsheet :size="26" />
+        <FileText :size="26" />
         <div>
-          <strong>{{ t('share.workbookTitle') }}</strong>
+          <strong>{{ t('share.statementTitle') }}</strong>
           <span>{{ debt.lender }} · {{ t('share.readOnly') }}</span>
         </div>
       </div>
@@ -118,42 +121,59 @@ function saveNote() {
       </button>
     </section>
 
-    <section class="sheet-tabs" aria-label="Workbook tabs">
-      <span class="active">{{ t('share.summaryTab') }}</span>
-      <span>{{ t('share.paymentsTab') }}</span>
-      <span>{{ t('share.notesTab') }}</span>
+    <section class="share-summary">
+      <article class="share-balance-card">
+        <span>{{ t('share.remainingBalance') }}</span>
+        <strong>{{ money.format(debt.remainingAmount) }}</strong>
+        <div class="progress">
+          <span :style="{ display: 'block', width: `${progress}%` }" />
+        </div>
+        <small>{{ progress }}% {{ t('share.paidBack') }}</small>
+      </article>
+
+      <article class="share-mini-card">
+        <span>{{ t('share.minimumPayment') }}</span>
+        <strong>{{ money.format(debt.minimumPayment) }}</strong>
+      </article>
+
+      <article class="share-mini-card">
+        <span>{{ t('share.forecast') }}</span>
+        <strong>{{ payoffMonths }} {{ t('share.months') }}</strong>
+      </article>
     </section>
 
-    <section class="sheet-grid" aria-label="Debt share spreadsheet">
-      <div class="sheet-corner" />
-      <div v-for="letter in ['A', 'B', 'C', 'D']" :key="letter" class="sheet-column">{{ letter }}</div>
+    <section class="share-statement-panel">
+      <div class="share-section-heading">
+        <span>{{ t('share.summaryTab') }}</span>
+        <strong>{{ debt.lender }}</strong>
+      </div>
 
-      <template v-for="(row, rowIndex) in workbookRows" :key="`summary-${rowIndex}`">
-        <div class="sheet-row-number">{{ rowIndex + 1 }}</div>
-        <div v-for="(cell, cellIndex) in row" :key="`${rowIndex}-${cellIndex}`" :class="['sheet-cell', { 'sheet-label': cellIndex % 2 === 0 }]">
-          {{ cell }}
+      <div class="share-detail-grid">
+        <div v-for="row in detailRows" :key="row.label" class="share-detail-cell">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.value }}</strong>
         </div>
-      </template>
+      </div>
+    </section>
 
-      <div class="sheet-row-number">6</div>
-      <div class="sheet-section-cell">{{ t('share.paymentLedger') }}</div>
-      <div class="sheet-section-cell" />
-      <div class="sheet-section-cell" />
-      <div class="sheet-section-cell" />
+    <section class="share-statement-panel">
+      <div class="share-section-heading">
+        <span>{{ t('share.paymentLedger') }}</span>
+        <strong>{{ paymentRows.length }} {{ t('share.rows') }}</strong>
+      </div>
 
-      <div class="sheet-row-number">7</div>
-      <div class="sheet-header-cell">{{ t('share.date') }}</div>
-      <div class="sheet-header-cell">{{ t('share.type') }}</div>
-      <div class="sheet-header-cell">{{ t('share.amount') }}</div>
-      <div class="sheet-header-cell">{{ t('share.balanceAfter') }}</div>
-
-      <template v-for="(row, index) in paymentRows" :key="`payment-${index}`">
-        <div class="sheet-row-number">{{ index + 8 }}</div>
-        <div class="sheet-cell">{{ row.date }}</div>
-        <div class="sheet-cell">{{ row.type }}</div>
-        <div class="sheet-cell">{{ money.format(row.amount) }}</div>
-        <div class="sheet-cell">{{ money.format(row.balance) }}</div>
-      </template>
+      <div class="share-payment-list">
+        <article v-for="(row, index) in paymentRows" :key="`${row.date}-${index}`" class="share-payment-row">
+          <div>
+            <strong>{{ row.type }}</strong>
+            <span>{{ row.date }} · {{ row.status }}</span>
+          </div>
+          <div>
+            <strong>{{ money.format(row.amount) }}</strong>
+            <span>{{ t('share.balanceAfter') }} {{ money.format(row.balance) }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="share-actions-grid">

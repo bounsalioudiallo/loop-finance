@@ -154,6 +154,7 @@
   },
   "share": {
     "workbookTitle": "Classeur de transparence de dette",
+    "statementTitle": "Relevé de transparence de dette",
     "readOnly": "vue prêteur en lecture seule",
     "copyLink": "Copier le lien",
     "copied": "Copié",
@@ -175,6 +176,8 @@
     "awaitingAck": "En attente de confirmation",
     "acknowledged": "Confirmé",
     "paymentLedger": "Registre des paiements",
+    "rows": "lignes",
+    "paidBack": "remboursé",
     "date": "Date",
     "type": "Type",
     "amount": "Montant",
