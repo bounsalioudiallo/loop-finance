@@ -209,6 +209,25 @@ button {
   padding: 12px 0 24px;
 }
 
+.page-header {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0 18px;
+}
+
+.page-header h1 {
+  max-width: 100%;
+  margin-bottom: 0;
+  font-size: clamp(2rem, 9vw, 3rem);
+  line-height: 1.03;
+}
+
+.page-header p {
+  max-width: 720px;
+  margin-bottom: 0;
+  font-size: 1rem;
+}
+
 .eyebrow {
   margin: 0;
   color: #176b5c;

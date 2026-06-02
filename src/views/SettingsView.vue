@@ -31,8 +31,7 @@ function signOut() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">Loop</p>
+  <section class="page-header">
     <h1>{{ t('settings.title') }}</h1>
     <p>{{ t('settings.subtitle') }}</p>
   </section>

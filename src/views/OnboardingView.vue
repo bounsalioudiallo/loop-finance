@@ -30,8 +30,7 @@ function save() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">Loop</p>
+  <section class="page-header">
     <h1>{{ t('onboarding.title') }}</h1>
     <p>{{ t('onboarding.subtitle') }}</p>
   </section>

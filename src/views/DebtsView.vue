@@ -40,8 +40,7 @@ function addDebt() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">Loop</p>
+  <section class="page-header">
     <h1>{{ t('debts.title') }}</h1>
     <p>{{ t('debts.subtitle') }}</p>
   </section>

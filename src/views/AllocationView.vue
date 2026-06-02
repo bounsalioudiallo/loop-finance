@@ -30,8 +30,7 @@ function approve() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">{{ t('allocation.eyebrow') }}</p>
+  <section class="page-header">
     <h1 v-if="income">{{ t('allocation.title', { amount: money.format(income.amount) }) }}</h1>
     <h1 v-else>{{ t('allocation.missing') }}</h1>
     <p>{{ t('allocation.subtitle') }}</p>

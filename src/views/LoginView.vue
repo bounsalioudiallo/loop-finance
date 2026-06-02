@@ -25,8 +25,7 @@ function submit() {
 </script>
 
 <template>
-  <section class="hero auth-hero">
-    <p class="eyebrow">Loop Finance</p>
+  <section class="page-header auth-hero">
     <h1>{{ t('auth.title') }}</h1>
     <p>{{ t('auth.subtitle') }}</p>
   </section>

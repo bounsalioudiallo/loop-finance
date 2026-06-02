@@ -30,8 +30,7 @@ function addRule() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">Loop</p>
+  <section class="page-header">
     <h1>{{ t('rules.title') }}</h1>
     <p>{{ t('rules.subtitle') }}</p>
   </section>

@@ -31,8 +31,7 @@ function submitIncome() {
 </script>
 
 <template>
-  <section class="hero">
-    <p class="eyebrow">Loop</p>
+  <section class="page-header">
     <h1>{{ t('income.title') }}</h1>
     <p>{{ t('income.subtitle') }}</p>
   </section>
