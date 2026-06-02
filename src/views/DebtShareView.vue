@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { CheckCircle2, Copy, FileText } from '@lucide/vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ArrowLeft, CheckCircle2, Copy, FileText } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const route = useRoute();
+const router = useRouter();
 const { t, locale } = useI18n();
 const store = useFinanceStore();
 const noteDraft = ref('');
 const copied = ref(false);
 
 const shareId = computed(() => String(route.params.shareId));
+const isOwnerPreview = computed(() => route.query.preview === 'owner');
 const share = computed(() => store.getDebtShare(shareId.value));
 const debt = computed(() => (share.value ? store.getDebt(share.value.debtId) : undefined));
+const publicShareUrl = computed(() => {
+  const origin = window.location.origin;
+  return `${origin}/debt/share/${shareId.value}`;
+});
 
 const money = computed(
   () =>
@@ -83,7 +89,7 @@ const detailRows = computed(() => {
 });
 
 async function copyLink() {
-  const url = window.location.href;
+  const url = publicShareUrl.value;
   copied.value = true;
 
   try {
@@ -97,6 +103,10 @@ async function copyLink() {
   }, 1600);
 }
 
+function goBackToDebt() {
+  router.push('/debts');
+}
+
 function saveNote() {
   if (!noteDraft.value.trim()) return;
   store.saveLenderNote(shareId.value, noteDraft.value.trim());
@@ -106,6 +116,21 @@ function saveNote() {
 
 <template>
   <main v-if="debt && share" class="share-workbook">
+    <section v-if="isOwnerPreview" class="share-preview-bar">
+      <button class="secondary-button" type="button" @click="goBackToDebt">
+        <ArrowLeft :size="18" />
+        {{ t('share.backToDebt') }}
+      </button>
+      <div>
+        <strong>{{ t('share.previewTitle') }}</strong>
+        <span>{{ t('share.previewBody') }}</span>
+      </div>
+      <button class="primary-button" type="button" @click="copyLink">
+        <Copy :size="18" />
+        {{ copied ? t('share.copied') : t('share.copyPublicLink') }}
+      </button>
+    </section>
+
     <section class="share-titlebar">
       <div class="share-file">
         <FileText :size="26" />
@@ -115,7 +140,7 @@ function saveNote() {
         </div>
       </div>
 
-      <button class="secondary-button" type="button" @click="copyLink">
+      <button v-if="!isOwnerPreview" class="secondary-button" type="button" @click="copyLink">
         <Copy :size="18" />
         {{ copied ? t('share.copied') : t('share.copyLink') }}
       </button>

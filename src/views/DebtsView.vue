@@ -43,7 +43,7 @@ function addDebt() {
 
 function openSharePortal(debtId: string) {
   const share = store.createDebtShare(debtId);
-  router.push(`/debt/share/${share.id}`);
+  router.push(`/debt/share/${share.id}?preview=owner`);
 }
 </script>
 

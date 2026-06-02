@@ -157,6 +157,7 @@
     "statementTitle": "Debt Transparency Statement",
     "readOnly": "read-only lender view",
     "copyLink": "Copy link",
+    "copyPublicLink": "Copy public link",
     "copied": "Copied",
     "copyFallback": "Copy this share link:",
     "summaryTab": "Summary",
@@ -193,6 +194,9 @@
     "lenderComment": "Lender comment",
     "commentPlaceholder": "Leave a note or confirmation",
     "saveComment": "Save comment",
+    "backToDebt": "Back to debt",
+    "previewTitle": "Owner preview",
+    "previewBody": "Copy the public lender link, then return to your debt records.",
     "notFound": "Share not found",
     "notFoundBody": "This local share link does not match an active debt record."
   }

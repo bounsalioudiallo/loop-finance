@@ -157,6 +157,7 @@
     "statementTitle": "Relevé de transparence de dette",
     "readOnly": "vue prêteur en lecture seule",
     "copyLink": "Copier le lien",
+    "copyPublicLink": "Copier le lien public",
     "copied": "Copié",
     "copyFallback": "Copiez ce lien partagé :",
     "summaryTab": "Résumé",
@@ -193,6 +194,9 @@
     "lenderComment": "Commentaire du prêteur",
     "commentPlaceholder": "Laisser une note ou confirmation",
     "saveComment": "Enregistrer le commentaire",
+    "backToDebt": "Retour à la dette",
+    "previewTitle": "Aperçu propriétaire",
+    "previewBody": "Copiez le lien public pour le prêteur, puis revenez à vos dettes.",
     "notFound": "Partage introuvable",
     "notFoundBody": "Ce lien local ne correspond à aucune dette active."
   }

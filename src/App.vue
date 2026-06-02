@@ -28,7 +28,7 @@ const navItems = computed(() => [
 ]);
 
 const showBottomNav = computed(() => route.path !== '/login' && !route.path.startsWith('/debt/share'));
-const showTopActions = computed(() => !route.path.startsWith('/debt/share'));
+const showTopActions = computed(() => !route.path.startsWith('/debt/share') || route.query.preview === 'owner');
 
 const drawerItems = computed(() => [
   { path: '/settings', label: t('nav.settings'), description: t('drawer.settings'), icon: Settings },
