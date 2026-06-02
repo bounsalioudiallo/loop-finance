@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
-  ArrowLeft,
   Banknote,
   CircleDollarSign,
   ClipboardList,
@@ -19,7 +18,6 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 
 const route = useRoute();
-const router = useRouter();
 const { locale, t } = useI18n();
 const auth = useAuthStore();
 const isDrawerOpen = ref(false);
@@ -30,7 +28,6 @@ const navItems = computed(() => [
 ]);
 
 const showBottomNav = computed(() => route.path !== '/login');
-const showBackButton = computed(() => !['/', '/income/new'].includes(route.path));
 
 const drawerItems = computed(() => [
   { path: '/settings', label: t('nav.settings'), description: t('drawer.settings'), icon: Settings },
@@ -52,25 +49,12 @@ function toggleLocale() {
   locale.value = locale.value === 'en' ? 'fr' : 'en';
   localStorage.setItem('loop-locale', locale.value);
 }
-
-function goBack() {
-  if (window.history.length > 1) {
-    router.back();
-    return;
-  }
-
-  router.push('/');
-}
 </script>
 
 <template>
   <div class="app-shell">
     <header class="top-bar">
-      <button v-if="showBackButton" class="icon-button" type="button" :aria-label="t('nav.back')" @click="goBack">
-        <ArrowLeft :size="21" />
-      </button>
-
-      <RouterLink v-else class="brand" to="/">
+      <RouterLink class="brand" to="/">
         <span class="brand-mark">L</span>
         <span>Loop</span>
       </RouterLink>

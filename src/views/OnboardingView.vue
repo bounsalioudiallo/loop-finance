@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 import type { AllocationMode, IncomeProfile } from '@/domain/finance';
 
@@ -30,10 +31,7 @@ function save() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('onboarding.title') }}</h1>
-    <p>{{ t('onboarding.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('onboarding.title')" :subtitle="t('onboarding.subtitle')" show-back />
 
   <form class="form-panel" @submit.prevent="save">
     <div class="form-grid">

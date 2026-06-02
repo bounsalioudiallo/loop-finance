@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useFinanceStore } from '@/stores/financeStore';
 
@@ -31,10 +32,7 @@ function signOut() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('settings.title') }}</h1>
-    <p>{{ t('settings.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" show-back />
 
   <section class="section-stack">
     <article class="panel">

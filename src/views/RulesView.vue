@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 import type { RuleType } from '@/domain/finance';
 
@@ -30,10 +31,7 @@ function addRule() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('rules.title') }}</h1>
-    <p>{{ t('rules.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('rules.title')" :subtitle="t('rules.subtitle')" show-back />
 
   <section class="section-stack">
     <form class="form-panel" @submit.prevent="addRule">

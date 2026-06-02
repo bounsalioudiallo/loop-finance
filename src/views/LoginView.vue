@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useAuthStore } from '@/stores/authStore';
 
 const { t } = useI18n();
@@ -25,10 +26,7 @@ function submit() {
 </script>
 
 <template>
-  <section class="page-header auth-hero">
-    <h1>{{ t('auth.title') }}</h1>
-    <p>{{ t('auth.subtitle') }}</p>
-  </section>
+  <AppPageHeader class="auth-hero" :title="t('auth.title')" :subtitle="t('auth.subtitle')" show-back />
 
   <form class="form-panel auth-panel" @submit.prevent="submit">
     <div class="form-grid">

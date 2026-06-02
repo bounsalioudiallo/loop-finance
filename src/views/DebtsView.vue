@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
@@ -40,10 +41,7 @@ function addDebt() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('debts.title') }}</h1>
-    <p>{{ t('debts.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('debts.title')" :subtitle="t('debts.subtitle')" show-back />
 
   <section class="section-stack">
     <form class="form-panel" @submit.prevent="addDebt">

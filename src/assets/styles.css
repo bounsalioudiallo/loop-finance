@@ -215,6 +215,20 @@ button {
   padding: 4px 0 18px;
 }
 
+.inline-back-button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 10px 0 8px;
+  color: #176b5c;
+  background: #ffffff;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
 .page-header h1 {
   max-width: 100%;
   margin-bottom: 0;

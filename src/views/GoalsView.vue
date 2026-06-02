@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
@@ -39,10 +40,7 @@ function addGoal() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('goals.title') }}</h1>
-    <p>{{ t('goals.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('goals.title')" :subtitle="t('goals.subtitle')" show-back />
 
   <section class="section-stack">
     <form class="form-panel" @submit.prevent="addGoal">

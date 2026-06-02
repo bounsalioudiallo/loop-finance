@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const route = useRoute();
@@ -30,11 +31,11 @@ function approve() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1 v-if="income">{{ t('allocation.title', { amount: money.format(income.amount) }) }}</h1>
-    <h1 v-else>{{ t('allocation.missing') }}</h1>
-    <p>{{ t('allocation.subtitle') }}</p>
-  </section>
+  <AppPageHeader
+    :title="income ? t('allocation.title', { amount: money.format(income.amount) }) : t('allocation.missing')"
+    :subtitle="t('allocation.subtitle')"
+    show-back
+  />
 
   <section v-if="plan" class="section-stack">
     <article class="panel">

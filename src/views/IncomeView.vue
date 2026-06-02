@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppPageHeader from '@/components/AppPageHeader.vue';
 import { useFinanceStore } from '@/stores/financeStore';
 import type { IncomeProfile } from '@/domain/finance';
 
@@ -31,10 +32,7 @@ function submitIncome() {
 </script>
 
 <template>
-  <section class="page-header">
-    <h1>{{ t('income.title') }}</h1>
-    <p>{{ t('income.subtitle') }}</p>
-  </section>
+  <AppPageHeader :title="t('income.title')" :subtitle="t('income.subtitle')" />
 
   <form class="form-panel" @submit.prevent="submitIncome">
     <div class="form-grid">
