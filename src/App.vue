@@ -11,6 +11,7 @@ const navItems = computed(() => [
   { path: '/income/new', label: t('nav.income') },
   { path: '/goals', label: t('nav.goals') },
   { path: '/debts', label: t('nav.debts') },
+  { path: '/rules', label: t('nav.rules') },
 ]);
 
 function toggleLocale() {

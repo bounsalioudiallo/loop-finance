@@ -1,26 +1,44 @@
 {
+  "actions": {
+    "adjust": "Modifier",
+    "delete": "Supprimer",
+    "remindLater": "Me le rappeler plus tard",
+    "save": "Enregistrer"
+  },
   "nav": {
     "primary": "Navigation principale",
     "dashboard": "Accueil",
     "income": "Revenu",
     "goals": "Objectifs",
-    "debts": "Dettes"
+    "debts": "Dettes",
+    "rules": "Règles"
+  },
+  "modes": {
+    "balanced": "Équilibré",
+    "aggressive": "Croissance agressive",
+    "stability": "Stabilité d'abord",
+    "family": "Famille d'abord"
   },
   "dashboard": {
     "eyebrow": "Rituel d'arrivée d'argent",
     "title": "Sachez où chaque dollar doit aller avant qu'il arrive.",
-    "subtitle": "Loop commence par la répartition, pas par le suivi des dépenses. Cette première base prépare l'application mobile pour le flux d'arrivée d'argent.",
+    "subtitle": "Ajoutez un revenu, laissez Loop appliquer vos règles, puis répartissez l'argent entre objectifs, dettes et dépenses libres.",
     "logIncome": "Ajouter un revenu",
-    "setGoals": "Créer des objectifs",
+    "setup": "Configurer",
     "incomeThisMonth": "Revenu ce mois-ci",
     "allocated": "Réparti",
     "remaining": "Restant",
     "healthScore": "Score financier",
-    "allocationPlan": "Exemple de répartition"
+    "allocationTable": "Table de répartition",
+    "upcoming": "Événements à venir",
+    "nextIncome": "Le prochain revenu dépend de votre profil",
+    "nextDebt": "Prochain paiement de dette",
+    "noDebt": "Aucun paiement de dette actif",
+    "activeGoals": "Objectifs actifs"
   },
   "income": {
     "title": "Ajouter un revenu",
-    "subtitle": "Ce formulaire deviendra le déclencheur de l'écran de répartition.",
+    "subtitle": "Ajoutez l'argent quand il arrive. Loop préparera immédiatement un plan de répartition.",
     "amount": "Montant reçu",
     "source": "Source du revenu",
     "profile": "Profil de revenu",
@@ -33,18 +51,60 @@
       "mixed": "Mixte"
     }
   },
+  "allocation": {
+    "eyebrow": "Argent reçu",
+    "title": "{amount} reçu.",
+    "subtitle": "Loop applique d'abord les règles, couvre les paiements minimums, puis répartit le reste selon votre mode.",
+    "missing": "Revenu introuvable",
+    "plan": "Plan de répartition",
+    "income": "Revenu",
+    "mode": "Mode",
+    "allocateNow": "Répartir maintenant",
+    "approved": "Répartition approuvée. Tableau de bord mis à jour."
+  },
   "goals": {
     "title": "Objectifs",
-    "subtitle": "Affectations futures comme fonds d'urgence, fonds d'entreprise, études, voyage ou boutique.",
-    "empty": "La gestion des objectifs commence ici."
+    "subtitle": "Créez des affectations futures comme fonds d'urgence, fonds d'entreprise, études, voyage ou boutique.",
+    "name": "Nom de l'objectif",
+    "current": "Montant actuel",
+    "target": "Montant cible",
+    "priority": "Priorité",
+    "add": "Ajouter un objectif",
+    "active": "Objectifs actifs"
   },
   "debts": {
     "title": "Dettes",
-    "subtitle": "Suivre le prêteur, le solde, les échéances, la fréquence de paiement et les prévisions de remboursement.",
-    "empty": "La gestion des dettes commence ici."
+    "subtitle": "Suivez le prêteur, le solde, les échéances, la fréquence de paiement et la progression.",
+    "lender": "Prêteur",
+    "original": "Montant original",
+    "remaining": "Montant restant",
+    "minimum": "Paiement minimum",
+    "interest": "Taux d'intérêt",
+    "dueDay": "Jour d'échéance",
+    "add": "Ajouter une dette",
+    "active": "Dettes actives",
+    "left": "restant",
+    "minimumShort": "minimum"
+  },
+  "rules": {
+    "title": "Règles",
+    "subtitle": "Transformez vos principes financiers en contraintes appliquées avant les recommandations pondérées.",
+    "label": "Règle",
+    "category": "Catégorie",
+    "type": "Type de règle",
+    "value": "Valeur",
+    "fixed": "Montant fixe",
+    "minimumPercent": "Pourcentage minimum",
+    "maximumPercent": "Pourcentage maximum",
+    "add": "Ajouter une règle",
+    "active": "Règles actives"
   },
   "onboarding": {
     "title": "Configurer Loop",
-    "subtitle": "Choisissez le profil de revenu, la langue et la devise avant la première répartition."
+    "subtitle": "Choisissez le profil de revenu, le mode de répartition, la langue et la devise avant la première répartition.",
+    "incomeProfile": "Profil de revenu",
+    "allocationMode": "Mode de répartition",
+    "language": "Langue",
+    "currency": "Devise"
   }
 }

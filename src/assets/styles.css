@@ -28,6 +28,60 @@ select {
   font: inherit;
 }
 
+.section-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.data-list {
+  display: grid;
+  gap: 10px;
+}
+
+.data-row {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.row-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.row-main strong {
+  display: block;
+}
+
+.row-main small,
+.muted {
+  color: #66736f;
+}
+
+.danger-button {
+  min-height: 38px;
+  padding: 0 12px;
+  color: #8c2f25;
+  background: #fff3f0;
+  border: 1px solid rgba(140, 47, 37, 0.14);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.notice {
+  padding: 12px 14px;
+  color: #176b5c;
+  background: #e8f2ee;
+  border: 1px solid rgba(23, 107, 92, 0.14);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
 button {
   cursor: pointer;
 }
@@ -249,7 +303,7 @@ select {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
   background: rgba(255, 255, 255, 0.94);
   border-top: 1px solid rgba(20, 34, 31, 0.1);

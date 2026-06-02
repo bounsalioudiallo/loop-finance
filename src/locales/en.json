@@ -1,26 +1,44 @@
 {
+  "actions": {
+    "adjust": "Adjust",
+    "delete": "Delete",
+    "remindLater": "Remind Me Later",
+    "save": "Save setup"
+  },
   "nav": {
     "primary": "Primary navigation",
     "dashboard": "Home",
     "income": "Income",
     "goals": "Goals",
-    "debts": "Debts"
+    "debts": "Debts",
+    "rules": "Rules"
+  },
+  "modes": {
+    "balanced": "Balanced",
+    "aggressive": "Aggressive Growth",
+    "stability": "Stability First",
+    "family": "Family First"
   },
   "dashboard": {
     "eyebrow": "Money arrival ritual",
     "title": "Know where every dollar should go before it arrives.",
-    "subtitle": "Loop starts with allocation, not expense tracking. This first shell sets up the mobile app foundation for the money arrival workflow.",
+    "subtitle": "Log income, let Loop apply your rules, then allocate across goals, debts, and free spending before the money disappears.",
     "logIncome": "Log income",
-    "setGoals": "Set goals",
+    "setup": "Setup",
     "incomeThisMonth": "Income this month",
     "allocated": "Allocated",
     "remaining": "Remaining",
     "healthScore": "Health score",
-    "allocationPlan": "Sample allocation plan"
+    "allocationTable": "Allocation table",
+    "upcoming": "Upcoming events",
+    "nextIncome": "Next income depends on your profile",
+    "nextDebt": "Next debt payment",
+    "noDebt": "No active debt payments",
+    "activeGoals": "Active goals"
   },
   "income": {
     "title": "Log income",
-    "subtitle": "This form will become the trigger for the allocation screen.",
+    "subtitle": "Add money when it arrives. Loop will immediately prepare an allocation plan.",
     "amount": "Amount received",
     "source": "Income source",
     "profile": "Income profile",
@@ -33,18 +51,60 @@
       "mixed": "Mixed"
     }
   },
+  "allocation": {
+    "eyebrow": "Money received",
+    "title": "{amount} received.",
+    "subtitle": "Loop applies rules first, covers debt minimums, then distributes what remains by your allocation mode.",
+    "missing": "Income not found",
+    "plan": "Allocation plan",
+    "income": "Income",
+    "mode": "Mode",
+    "allocateNow": "Allocate Now",
+    "approved": "Allocation approved. Dashboard updated."
+  },
   "goals": {
     "title": "Goals",
-    "subtitle": "Future dollar assignments like emergency fund, business fund, education, travel, or a shop.",
-    "empty": "Goal management starts here."
+    "subtitle": "Create future dollar assignments like emergency fund, business fund, education, travel, or a shop.",
+    "name": "Goal name",
+    "current": "Current amount",
+    "target": "Target amount",
+    "priority": "Priority",
+    "add": "Add goal",
+    "active": "Active goals"
   },
   "debts": {
     "title": "Debts",
-    "subtitle": "Track lender, balance, due dates, payment frequency, and payoff forecasts.",
-    "empty": "Debt management starts here."
+    "subtitle": "Track lender, balance, due dates, payment frequency, and payoff progress.",
+    "lender": "Lender",
+    "original": "Original amount",
+    "remaining": "Remaining amount",
+    "minimum": "Minimum payment",
+    "interest": "Interest rate",
+    "dueDay": "Due day",
+    "add": "Add debt",
+    "active": "Active debts",
+    "left": "left",
+    "minimumShort": "minimum"
+  },
+  "rules": {
+    "title": "Rules",
+    "subtitle": "Turn personal financial principles into constraints that run before weighted recommendations.",
+    "label": "Rule",
+    "category": "Category",
+    "type": "Rule type",
+    "value": "Value",
+    "fixed": "Fixed amount",
+    "minimumPercent": "Minimum percent",
+    "maximumPercent": "Maximum percent",
+    "add": "Add rule",
+    "active": "Active rules"
   },
   "onboarding": {
     "title": "Set up Loop",
-    "subtitle": "Choose income pattern, language, and currency before the first allocation."
+    "subtitle": "Choose income pattern, allocation mode, language, and currency before the first allocation.",
+    "incomeProfile": "Income profile",
+    "allocationMode": "Allocation mode",
+    "language": "Language",
+    "currency": "Currency"
   }
 }
