@@ -7,6 +7,7 @@ dist-ssr/
 .env.*
 !.env.example
 coverage/
+loop-finance-local.png
 firebase-debug.log
 firestore-debug.log
 ui-debug.log

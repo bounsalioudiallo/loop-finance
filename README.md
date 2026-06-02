@@ -16,32 +16,32 @@ Loop is a mobile-first financial allocation app focused on assigning income befo
 Install dependencies:
 
 ```sh
-npm install
+pnpm install
 ```
 
 Start the web app:
 
 ```sh
-npm run dev
+pnpm run dev
 ```
 
 Build for production:
 
 ```sh
-npm run build
+pnpm run build
 ```
 
 Initialize native projects after dependencies are installed:
 
 ```sh
-npm run cap:add:ios
-npm run cap:add:android
+pnpm run cap:add:ios
+pnpm run cap:add:android
 ```
 
 Sync web assets to native projects:
 
 ```sh
-npm run cap:sync
+pnpm run cap:sync
 ```
 
 ## Environment
