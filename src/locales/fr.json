@@ -11,7 +11,8 @@
     "income": "Revenu",
     "goals": "Objectifs",
     "debts": "Dettes",
-    "rules": "Règles"
+    "rules": "Règles",
+    "settings": "Réglages"
   },
   "modes": {
     "balanced": "Équilibré",
@@ -106,5 +107,32 @@
     "allocationMode": "Mode de répartition",
     "language": "Langue",
     "currency": "Devise"
+  },
+  "auth": {
+    "login": "Connexion",
+    "title": "Bon retour sur Loop.",
+    "subtitle": "Connectez-vous localement pour l'instant. Firebase Auth remplacera cet écran quand les identifiants seront branchés.",
+    "name": "Nom",
+    "email": "Email",
+    "continue": "Continuer",
+    "signOut": "Se déconnecter",
+    "firebaseNote": "La connexion locale permet d'avancer sur le produit pendant que le projet Firebase est encore en attente."
+  },
+  "settings": {
+    "title": "Réglages",
+    "subtitle": "Gérez le compte, la configuration financière, les objectifs, les dettes et les règles au même endroit.",
+    "guest": "Mode invité",
+    "loginPrompt": "Connectez-vous localement maintenant, puis branchez Firebase Auth plus tard.",
+    "profile": "Profil financier",
+    "incomeProfile": "Profil de revenu",
+    "allocationMode": "Mode de répartition",
+    "currency": "Devise",
+    "language": "Langue",
+    "manage": "Gérer Loop",
+    "setupTitle": "Configuration",
+    "setupBody": "Modifier la langue, la devise, le profil de revenu et le mode de répartition.",
+    "goalsBody": "Créer et gérer les affectations futures.",
+    "debtsBody": "Suivre les soldes, minimums et progrès de remboursement.",
+    "rulesBody": "Contrôler les règles fixes appliquées avant les pondérations."
   }
 }

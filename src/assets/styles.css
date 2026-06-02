@@ -82,6 +82,33 @@ select {
   font-weight: 800;
 }
 
+.compact-row {
+  padding: 12px;
+}
+
+.settings-link {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  color: #14221f;
+  background: #ffffff;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.settings-link span {
+  color: #66736f;
+  font-size: 0.9rem;
+}
+
+.auth-hero,
+.auth-panel {
+  max-width: 680px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 button {
   cursor: pointer;
 }
@@ -126,6 +153,7 @@ button {
 }
 
 .language-toggle,
+.account-link,
 .primary-button,
 .secondary-button {
   min-height: 44px;
@@ -139,6 +167,23 @@ button {
   color: #14221f;
   background: #ffffff;
   border: 1px solid rgba(20, 34, 31, 0.12);
+}
+
+.account-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 0 12px;
+  color: #ffffff;
+  background: #14221f;
+  text-decoration: none;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .screen {
@@ -303,7 +348,7 @@ select {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
   background: rgba(255, 255, 255, 0.94);
   border-top: 1px solid rgba(20, 34, 31, 0.1);

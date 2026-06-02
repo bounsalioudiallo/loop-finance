@@ -11,7 +11,8 @@
     "income": "Income",
     "goals": "Goals",
     "debts": "Debts",
-    "rules": "Rules"
+    "rules": "Rules",
+    "settings": "Settings"
   },
   "modes": {
     "balanced": "Balanced",
@@ -106,5 +107,32 @@
     "allocationMode": "Allocation mode",
     "language": "Language",
     "currency": "Currency"
+  },
+  "auth": {
+    "login": "Login",
+    "title": "Welcome back to Loop.",
+    "subtitle": "Sign in locally for now. Firebase Auth will replace this screen when credentials are connected.",
+    "name": "Name",
+    "email": "Email",
+    "continue": "Continue",
+    "signOut": "Sign out",
+    "firebaseNote": "Local sign-in keeps the product flow moving while the Firebase project is still pending."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account, financial setup, goals, debts, and rules from one place.",
+    "guest": "Guest mode",
+    "loginPrompt": "Login locally now, then connect Firebase Auth later.",
+    "profile": "Financial profile",
+    "incomeProfile": "Income profile",
+    "allocationMode": "Allocation mode",
+    "currency": "Currency",
+    "language": "Language",
+    "manage": "Manage Loop",
+    "setupTitle": "Setup",
+    "setupBody": "Update language, currency, income profile, and allocation mode.",
+    "goalsBody": "Create and maintain future dollar assignments.",
+    "debtsBody": "Track debt balances, minimums, and payoff progress.",
+    "rulesBody": "Control the hard rules that run before allocation weights."
   }
 }
