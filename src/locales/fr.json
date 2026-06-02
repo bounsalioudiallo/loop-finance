@@ -12,7 +12,10 @@
     "goals": "Objectifs",
     "debts": "Dettes",
     "rules": "Règles",
-    "settings": "Réglages"
+    "settings": "Réglages",
+    "menu": "Menu",
+    "back": "Retour",
+    "close": "Fermer"
   },
   "modes": {
     "balanced": "Équilibré",
@@ -110,6 +113,7 @@
   },
   "auth": {
     "login": "Connexion",
+    "account": "Compte",
     "title": "Bon retour sur Loop.",
     "subtitle": "Connectez-vous localement pour l'instant. Firebase Auth remplacera cet écran quand les identifiants seront branchés.",
     "name": "Nom",
@@ -134,5 +138,17 @@
     "goalsBody": "Créer et gérer les affectations futures.",
     "debtsBody": "Suivre les soldes, minimums et progrès de remboursement.",
     "rulesBody": "Contrôler les règles fixes appliquées avant les pondérations."
+  },
+  "drawer": {
+    "title": "Navigation",
+    "manage": "Gérer Loop",
+    "settings": "Compte, profil et préférences.",
+    "setup": "Configuration",
+    "setupBody": "Langue, devise, profil de revenu et mode de répartition.",
+    "goals": "Affectations futures.",
+    "debts": "Soldes, minimums et progression.",
+    "rules": "Règles fixes avant les pondérations.",
+    "account": "Connexion locale aujourd'hui, Firebase Auth plus tard.",
+    "footer": "Les outils secondaires restent ici pour garder le flux principal clair."
   }
 }

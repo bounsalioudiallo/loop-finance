@@ -12,7 +12,10 @@
     "goals": "Goals",
     "debts": "Debts",
     "rules": "Rules",
-    "settings": "Settings"
+    "settings": "Settings",
+    "menu": "Menu",
+    "back": "Back",
+    "close": "Close"
   },
   "modes": {
     "balanced": "Balanced",
@@ -110,6 +113,7 @@
   },
   "auth": {
     "login": "Login",
+    "account": "Account",
     "title": "Welcome back to Loop.",
     "subtitle": "Sign in locally for now. Firebase Auth will replace this screen when credentials are connected.",
     "name": "Name",
@@ -134,5 +138,17 @@
     "goalsBody": "Create and maintain future dollar assignments.",
     "debtsBody": "Track debt balances, minimums, and payoff progress.",
     "rulesBody": "Control the hard rules that run before allocation weights."
+  },
+  "drawer": {
+    "title": "Navigation",
+    "manage": "Manage Loop",
+    "settings": "Account, profile, and app preferences.",
+    "setup": "Setup",
+    "setupBody": "Language, currency, income profile, and allocation mode.",
+    "goals": "Future dollar assignments.",
+    "debts": "Balances, minimums, and payoff progress.",
+    "rules": "Hard rules before allocation weights.",
+    "account": "Local login today, Firebase Auth later.",
+    "footer": "Secondary tools live here so the core flow stays clear."
   }
 }

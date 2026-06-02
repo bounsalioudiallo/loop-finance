@@ -21,6 +21,7 @@
     "@capacitor/keyboard": "^6.0.0",
     "@capacitor/push-notifications": "^6.0.0",
     "@capacitor/status-bar": "^6.0.0",
+    "@lucide/vue": "^1.17.0",
     "firebase": "^10.14.0",
     "vue": "^3.5.0",
     "vue-i18n": "^9.14.0",
