@@ -31,7 +31,7 @@ function addRule() {
 </script>
 
 <template>
-  <AppPageHeader :title="t('rules.title')" :subtitle="t('rules.subtitle')" show-back />
+  <AppPageHeader :title="t('rules.title')" :subtitle="t('rules.subtitle')" />
 
   <section class="section-stack">
     <form class="form-panel" @submit.prevent="addRule">

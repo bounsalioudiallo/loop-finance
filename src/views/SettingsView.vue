@@ -23,6 +23,7 @@ const managementLinks = computed(() => [
   { to: '/goals', title: t('goals.title'), body: t('settings.goalsBody') },
   { to: '/debts', title: t('debts.title'), body: t('settings.debtsBody') },
   { to: '/rules', title: t('rules.title'), body: t('settings.rulesBody') },
+  { to: '/forecast', title: t('forecast.title'), body: t('settings.forecastBody') },
 ]);
 
 function signOut() {
@@ -32,7 +33,7 @@ function signOut() {
 </script>
 
 <template>
-  <AppPageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" show-back />
+  <AppPageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
 
   <section class="section-stack">
     <article class="panel">

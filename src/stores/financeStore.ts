@@ -1,6 +1,7 @@
 import { computed, reactive, watch } from 'vue';
 import {
   createAllocationPlan,
+  createFinancialForecast,
   type AllocationLine,
   type AllocationMode,
   type Debt,
@@ -71,6 +72,8 @@ const defaultState: FinanceState = {
       minimumPayment: 150,
       interestRate: 0,
       dueDay: 18,
+      firstPaymentDate: '2026-06-18',
+      paymentFrequency: 'monthly',
     },
   ],
   rules: [
@@ -151,6 +154,16 @@ export function useFinanceStore() {
 
     return Math.round(Math.min(100, 45 + goalProgress * 35 + debtProgress * 20));
   });
+
+  const forecast = computed(() =>
+    createFinancialForecast(
+      state.settings,
+      state.goals,
+      state.debts,
+      state.rules,
+      state.incomeEvents,
+    ),
+  );
 
   function saveSettings(settings: Partial<UserSettings>) {
     Object.assign(state.settings, settings, { isOnboarded: true });
@@ -275,6 +288,7 @@ export function useFinanceStore() {
     incomeThisMonth,
     allocated,
     healthScore,
+    forecast,
     saveSettings,
     addGoal,
     addDebt,

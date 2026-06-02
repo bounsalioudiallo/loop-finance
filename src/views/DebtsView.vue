@@ -2,12 +2,15 @@
 import { computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { CalendarClock, ListChecks, WalletCards } from '@lucide/vue';
 import AppPageHeader from '@/components/AppPageHeader.vue';
+import { createDebtPaymentPlan, type Debt, type PaymentFrequency } from '@/domain/finance';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
 const router = useRouter();
 const store = useFinanceStore();
+const today = new Date().toISOString().slice(0, 10);
 
 const form = reactive({
   lender: '',
@@ -15,7 +18,8 @@ const form = reactive({
   remainingAmount: '1000',
   minimumPayment: '100',
   interestRate: '0',
-  dueDay: '18',
+  firstPaymentDate: today,
+  paymentFrequency: 'monthly' as PaymentFrequency,
 });
 
 const money = computed(
@@ -28,6 +32,7 @@ const money = computed(
 
 function addDebt() {
   if (!form.lender.trim()) return;
+  const [, , firstPaymentDay] = form.firstPaymentDate.split('-').map(Number);
 
   store.addDebt({
     lender: form.lender.trim(),
@@ -35,7 +40,9 @@ function addDebt() {
     remainingAmount: Number(form.remainingAmount) || 0,
     minimumPayment: Number(form.minimumPayment) || 0,
     interestRate: Number(form.interestRate) || 0,
-    dueDay: Number(form.dueDay) || 1,
+    dueDay: firstPaymentDay || 1,
+    firstPaymentDate: form.firstPaymentDate,
+    paymentFrequency: form.paymentFrequency,
   });
 
   form.lender = '';
@@ -45,15 +52,23 @@ function openSharePortal(debtId: string) {
   const share = store.createDebtShare(debtId);
   router.push(`/debt/share/${share.id}?preview=owner`);
 }
+
+function planFor(debt: Debt) {
+  return createDebtPaymentPlan(debt, { maxRows: 3 });
+}
+
+function formatPlanDate(date: string) {
+  return new Date(date).toLocaleDateString(locale.value, { month: 'short', day: 'numeric' });
+}
 </script>
 
 <template>
-  <AppPageHeader :title="t('debts.title')" :subtitle="t('debts.subtitle')" show-back />
+  <AppPageHeader :title="t('debts.title')" :subtitle="t('debts.subtitle')" />
 
   <section class="section-stack">
-    <form class="form-panel" @submit.prevent="addDebt">
-      <div class="form-grid">
-        <label>
+    <form class="form-panel debt-form-panel" @submit.prevent="addDebt">
+      <div class="form-grid debt-form-grid">
+        <label class="debt-form-full">
           <span>{{ t('debts.lender') }}</span>
           <input v-model="form.lender" placeholder="Family Loan" type="text" />
         </label>
@@ -74,8 +89,16 @@ function openSharePortal(debtId: string) {
           <input v-model="form.interestRate" inputmode="decimal" type="text" />
         </label>
         <label>
-          <span>{{ t('debts.dueDay') }}</span>
-          <input v-model="form.dueDay" inputmode="numeric" type="text" />
+          <span>{{ t('debts.firstPaymentDate') }}</span>
+          <input v-model="form.firstPaymentDate" type="date" />
+        </label>
+        <label>
+          <span>{{ t('debts.paymentFrequency') }}</span>
+          <select v-model="form.paymentFrequency">
+            <option value="weekly">{{ t('debts.frequencies.weekly') }}</option>
+            <option value="monthly">{{ t('debts.frequencies.monthly') }}</option>
+            <option value="yearly">{{ t('debts.frequencies.yearly') }}</option>
+          </select>
         </label>
       </div>
       <div class="actions" style="margin-top: 18px">
@@ -102,6 +125,39 @@ function openSharePortal(debtId: string) {
           <div class="progress">
             <span :style="{ display: 'block', width: `${Math.min(100, (1 - debt.remainingAmount / debt.originalAmount) * 100)}%` }" />
           </div>
+
+          <section class="debt-plan-workshop">
+            <div class="debt-plan-heading">
+              <div>
+                <span>{{ t('debts.planWorkshop') }}</span>
+                <strong>{{ t('debts.repaymentPlan') }}</strong>
+              </div>
+              <small>{{ planFor(debt).monthsToPayoff }} {{ t('debts.installments') }}</small>
+            </div>
+
+            <div class="debt-plan-metrics">
+              <div>
+                <WalletCards :size="17" />
+                <span>{{ t('debts.planPayment') }}</span>
+                <strong>{{ money.format(planFor(debt).paymentAmount) }}</strong>
+              </div>
+              <div>
+                <CalendarClock :size="17" />
+                <span>{{ t('debts.planFrequency') }}</span>
+                <strong>{{ t(`debts.frequencies.${debt.paymentFrequency || 'monthly'}`) }}</strong>
+              </div>
+            </div>
+
+            <div class="debt-plan-list">
+              <div v-for="row in planFor(debt).rows" :key="`${debt.id}-${row.month}`" class="debt-plan-row">
+                <ListChecks :size="17" />
+                <span>{{ formatPlanDate(row.dueDate) }}</span>
+                <strong>{{ money.format(row.amount) }}</strong>
+                <small>{{ money.format(row.balanceAfter) }} {{ t('debts.left') }}</small>
+              </div>
+            </div>
+          </section>
+
           <div class="actions">
             <button class="secondary-button" type="button" @click="openSharePortal(debt.id)">
               {{ t('debts.share') }}

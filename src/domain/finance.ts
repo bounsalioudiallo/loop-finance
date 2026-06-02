@@ -1,6 +1,7 @@
 export type IncomeProfile = 'monthly' | 'biweekly' | 'weekly' | 'project' | 'mixed';
 export type AllocationMode = 'balanced' | 'aggressive' | 'stability' | 'family';
 export type RuleType = 'fixed' | 'minimumPercent' | 'maximumPercent';
+export type PaymentFrequency = 'weekly' | 'monthly' | 'yearly';
 
 export interface UserSettings {
   incomeProfile: IncomeProfile;
@@ -26,6 +27,8 @@ export interface Debt {
   minimumPayment: number;
   interestRate: number;
   dueDay: number;
+  firstPaymentDate?: string;
+  paymentFrequency?: PaymentFrequency;
 }
 
 export interface FinancialRule {
@@ -60,6 +63,59 @@ export interface AllocationPlan {
   remainingAmount: number;
   lines: AllocationLine[];
   notes: string[];
+}
+
+export interface ForecastScenario {
+  id: 'conservative' | 'expected' | 'optimistic';
+  monthlyIncome: number;
+  monthlyAfterDebtMinimums: number;
+}
+
+export interface GoalForecast {
+  goalId: string;
+  name: string;
+  remainingAmount: number;
+  monthlyContribution: number;
+  monthsToComplete: number | null;
+}
+
+export interface DebtForecast {
+  debtId: string;
+  lender: string;
+  remainingAmount: number;
+  minimumPayment: number;
+  monthsToPayoff: number | null;
+}
+
+export interface ForecastAlert {
+  id: string;
+  level: 'good' | 'warning' | 'risk';
+  titleKey: string;
+  bodyKey: string;
+}
+
+export interface FinancialForecast {
+  expectedMonthlyIncome: number;
+  scenarios: ForecastScenario[];
+  goalForecasts: GoalForecast[];
+  debtForecasts: DebtForecast[];
+  alerts: ForecastAlert[];
+}
+
+export interface DebtPaymentPlanRow {
+  month: number;
+  dueDate: string;
+  amount: number;
+  balanceAfter: number;
+  isFinalPayment: boolean;
+}
+
+export interface DebtPaymentPlan {
+  debtId: string;
+  paymentAmount: number;
+  monthsToPayoff: number;
+  totalPaid: number;
+  rows: DebtPaymentPlanRow[];
 }
 
 const modeWeights: Record<AllocationMode, Record<string, number>> = {
@@ -110,6 +166,130 @@ function goalBucket(name: string) {
 
 function roundMoney(amount: number) {
   return Math.round(amount * 100) / 100;
+}
+
+function profileMultiplier(profile: IncomeProfile) {
+  const multipliers: Record<IncomeProfile, number> = {
+    monthly: 1,
+    biweekly: 2.17,
+    weekly: 4.33,
+    project: 1,
+    mixed: 1.5,
+  };
+
+  return multipliers[profile];
+}
+
+function expectedMonthlyIncome(events: IncomeEvent[], profile: IncomeProfile) {
+  if (events.length === 0) return 0;
+
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
+  );
+  const latestEvent = sortedEvents[0];
+  const recentEvents = sortedEvents.filter((event) => {
+    const ageInDays =
+      (new Date(latestEvent.receivedAt).getTime() - new Date(event.receivedAt).getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    return ageInDays <= 90;
+  });
+
+  if (recentEvents.length === 1) {
+    return roundMoney(recentEvents[0].amount * profileMultiplier(profile));
+  }
+
+  const firstDate = new Date(recentEvents[recentEvents.length - 1].receivedAt).getTime();
+  const lastDate = new Date(recentEvents[0].receivedAt).getTime();
+  const months = Math.max((lastDate - firstDate) / (1000 * 60 * 60 * 24 * 30), 1);
+  const total = recentEvents.reduce((sum, event) => sum + event.amount, 0);
+
+  return roundMoney(total / months);
+}
+
+function nextDueDate(startDate: Date, dueDay: number) {
+  const normalizedDueDay = Math.min(Math.max(dueDay, 1), 28);
+  const candidate = new Date(startDate.getFullYear(), startDate.getMonth(), normalizedDueDay);
+
+  if (candidate.getTime() <= startDate.getTime()) {
+    candidate.setMonth(candidate.getMonth() + 1);
+  }
+
+  return candidate;
+}
+
+function parseLocalDate(value: string) {
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) return new Date(value);
+
+  return new Date(year, month - 1, day);
+}
+
+function planStartDate(debt: Debt, startDate?: string) {
+  if (debt.firstPaymentDate) return parseLocalDate(debt.firstPaymentDate);
+  if (startDate) return nextDueDate(new Date(startDate), debt.dueDay);
+
+  return nextDueDate(new Date(), debt.dueDay);
+}
+
+function addPaymentInterval(date: Date, intervals: number, frequency: PaymentFrequency) {
+  if (frequency === 'weekly') {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + intervals * 7);
+  }
+
+  if (frequency === 'yearly') {
+    return new Date(date.getFullYear() + intervals, date.getMonth(), date.getDate());
+  }
+
+  return new Date(date.getFullYear(), date.getMonth() + intervals, date.getDate());
+}
+
+export function createDebtPaymentPlan(
+  debt: Debt,
+  options: { startDate?: string; maxRows?: number } = {},
+): DebtPaymentPlan {
+  const paymentAmount = roundMoney(Math.max(0, Math.min(debt.minimumPayment, debt.remainingAmount)));
+  const rows: DebtPaymentPlanRow[] = [];
+
+  if (debt.remainingAmount <= 0 || paymentAmount <= 0) {
+    return {
+      debtId: debt.id,
+      paymentAmount,
+      monthsToPayoff: 0,
+      totalPaid: 0,
+      rows,
+    };
+  }
+
+  const monthsToPayoff = Math.ceil(debt.remainingAmount / paymentAmount);
+  const maxRows = Math.min(options.maxRows ?? monthsToPayoff, monthsToPayoff);
+  const firstDueDate = planStartDate(debt, options.startDate);
+  const paymentFrequency = debt.paymentFrequency || 'monthly';
+  let balance = debt.remainingAmount;
+  let totalPaid = 0;
+
+  for (let index = 0; index < maxRows; index += 1) {
+    const amount = roundMoney(Math.min(paymentAmount, balance));
+    balance = roundMoney(Math.max(0, balance - amount));
+    totalPaid = roundMoney(totalPaid + amount);
+
+    rows.push({
+      month: index + 1,
+      dueDate: addPaymentInterval(firstDueDate, index, paymentFrequency).toISOString(),
+      amount,
+      balanceAfter: balance,
+      isFinalPayment: balance === 0,
+    });
+  }
+
+  return {
+    debtId: debt.id,
+    paymentAmount,
+    monthsToPayoff,
+    totalPaid,
+    rows,
+  };
 }
 
 export function createAllocationPlan(
@@ -248,5 +428,122 @@ export function createAllocationPlan(
     remainingAmount: roundMoney(income.amount - allocatedAmount),
     lines,
     notes,
+  };
+}
+
+export function createFinancialForecast(
+  settings: UserSettings,
+  goals: Goal[],
+  debts: Debt[],
+  rules: FinancialRule[],
+  incomeEvents: IncomeEvent[],
+): FinancialForecast {
+  const expectedIncome = expectedMonthlyIncome(incomeEvents, settings.incomeProfile);
+  const debtMinimums = debts.reduce(
+    (sum, debt) => sum + Math.min(debt.minimumPayment, debt.remainingAmount),
+    0,
+  );
+  const scenarioInputs = [
+    { id: 'conservative' as const, factor: 0.8 },
+    { id: 'expected' as const, factor: 1 },
+    { id: 'optimistic' as const, factor: 1.25 },
+  ];
+  const scenarios = scenarioInputs.map(({ id, factor }) => {
+    const monthlyIncome = roundMoney(expectedIncome * factor);
+
+    return {
+      id,
+      monthlyIncome,
+      monthlyAfterDebtMinimums: roundMoney(Math.max(0, monthlyIncome - debtMinimums)),
+    };
+  });
+  const syntheticIncome: IncomeEvent = {
+    id: 'forecast-income',
+    amount: expectedIncome,
+    source: 'Forecast',
+    profile: settings.incomeProfile,
+    receivedAt: new Date().toISOString(),
+    allocated: false,
+  };
+  const allocationPlan =
+    expectedIncome > 0
+      ? createAllocationPlan(
+          syntheticIncome,
+          goals,
+          debts,
+          rules,
+          settings.allocationMode as AllocationMode,
+        )
+      : null;
+
+  const goalForecasts = goals
+    .filter((goal) => goal.currentAmount < goal.targetAmount)
+    .map((goal) => {
+      const monthlyContribution =
+        allocationPlan?.lines.find((line) => line.kind === 'goal' && line.label === goal.name)?.amount || 0;
+      const remainingAmount = roundMoney(goal.targetAmount - goal.currentAmount);
+
+      return {
+        goalId: goal.id,
+        name: goal.name,
+        remainingAmount,
+        monthlyContribution,
+        monthsToComplete:
+          monthlyContribution > 0 ? Math.ceil(remainingAmount / monthlyContribution) : null,
+      };
+    });
+
+  const debtForecasts = debts
+    .filter((debt) => debt.remainingAmount > 0)
+    .map((debt) => ({
+      debtId: debt.id,
+      lender: debt.lender,
+      remainingAmount: debt.remainingAmount,
+      minimumPayment: debt.minimumPayment,
+      monthsToPayoff:
+        debt.minimumPayment > 0 ? Math.ceil(debt.remainingAmount / debt.minimumPayment) : null,
+    }));
+
+  const alerts: ForecastAlert[] = [];
+  const debtLoad = expectedIncome > 0 ? debtMinimums / expectedIncome : 0;
+
+  if (expectedIncome === 0) {
+    alerts.push({
+      id: 'income-data',
+      level: 'warning',
+      titleKey: 'forecast.alerts.noIncomeTitle',
+      bodyKey: 'forecast.alerts.noIncomeBody',
+    });
+  } else if (debtLoad > 0.35) {
+    alerts.push({
+      id: 'debt-pressure',
+      level: 'risk',
+      titleKey: 'forecast.alerts.debtPressureTitle',
+      bodyKey: 'forecast.alerts.debtPressureBody',
+    });
+  } else {
+    alerts.push({
+      id: 'income-ready',
+      level: 'good',
+      titleKey: 'forecast.alerts.incomeReadyTitle',
+      bodyKey: 'forecast.alerts.incomeReadyBody',
+    });
+  }
+
+  if (goalForecasts.some((goal) => goal.monthlyContribution <= 0)) {
+    alerts.push({
+      id: 'goal-stall',
+      level: 'warning',
+      titleKey: 'forecast.alerts.goalStallTitle',
+      bodyKey: 'forecast.alerts.goalStallBody',
+    });
+  }
+
+  return {
+    expectedMonthlyIncome: expectedIncome,
+    scenarios,
+    goalForecasts,
+    debtForecasts,
+    alerts,
   };
 }

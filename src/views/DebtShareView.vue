@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, CheckCircle2, Copy, FileText } from '@lucide/vue';
+import {
+  ArrowLeft,
+  BadgeDollarSign,
+  CalendarClock,
+  CheckCircle2,
+  Circle,
+  Copy,
+  FileText,
+  MessageSquareText,
+  WalletCards,
+} from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
+import { createDebtPaymentPlan } from '@/domain/finance';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const route = useRoute();
@@ -40,51 +51,39 @@ const progress = computed(() => {
 });
 
 const payoffMonths = computed(() => {
-  if (!debt.value || debt.value.minimumPayment <= 0) return 0;
-  return Math.ceil(debt.value.remainingAmount / debt.value.minimumPayment);
+  if (!debt.value) return 0;
+  return paymentPlan.value?.monthsToPayoff || 0;
 });
 
-const paymentRows = computed(() => {
-  if (!debt.value) return [];
+const paymentPlan = computed(() =>
+  debt.value
+    ? createDebtPaymentPlan(debt.value, { startDate: share.value?.createdAt, maxRows: 6 })
+    : null,
+);
 
-  const historicalPayment = Math.min(paidAmount.value, debt.value.minimumPayment);
-
-  return [
-    {
-      date: new Date().toLocaleDateString(locale.value),
-      type: t('share.historyRecorded'),
-      amount: historicalPayment,
-      balance: debt.value.remainingAmount,
-      status: t('share.confirmed'),
-    },
-    ...Array.from({ length: Math.min(6, payoffMonths.value) }, (_, index) => {
-      const paymentNumber = index + 1;
-      const amount = Math.min(debt.value!.minimumPayment, Math.max(0, debt.value!.remainingAmount - debt.value!.minimumPayment * index));
-      const balance = Math.max(0, debt.value!.remainingAmount - debt.value!.minimumPayment * paymentNumber);
-
-      return {
-        date: `${t('share.month')} ${paymentNumber}`,
-        type: t('share.scheduled'),
-        amount,
-        balance,
-        status: balance === 0 ? t('share.finalPayment') : t('share.planned'),
-      };
-    }),
-  ];
-});
+const paymentRows = computed(() =>
+  (paymentPlan.value?.rows || []).map((row) => ({
+    date: new Date(row.dueDate).toLocaleDateString(locale.value),
+    type: `${t('share.month')} ${row.month}`,
+    amount: row.amount,
+    balance: row.balanceAfter,
+    status: row.isFinalPayment ? t('share.finalPayment') : t('share.planned'),
+    confirmed: false,
+  })),
+);
 
 const detailRows = computed(() => {
   if (!debt.value || !share.value) return [];
 
   return [
     { label: t('share.originalAmount'), value: money.value.format(debt.value.originalAmount) },
-    { label: t('share.remainingBalance'), value: money.value.format(debt.value.remainingAmount) },
-    { label: t('share.minimumPayment'), value: money.value.format(debt.value.minimumPayment) },
-    { label: t('share.dueDay'), value: `${debt.value.dueDay}` },
+    { label: t('share.remainingBalance'), value: money.value.format(debt.value.remainingAmount), tone: 'strong' },
+    { label: t('share.minimumPayment'), value: money.value.format(debt.value.minimumPayment), tone: 'money' },
+    { label: t('share.firstPayment'), value: new Date(paymentPlan.value?.rows[0]?.dueDate || debt.value.firstPaymentDate || share.value.createdAt).toLocaleDateString(locale.value) },
+    { label: t('share.frequency'), value: t(`debts.frequencies.${debt.value.paymentFrequency || 'monthly'}`) },
     { label: t('share.interestRate'), value: `${debt.value.interestRate}%` },
-    { label: t('share.forecast'), value: `${payoffMonths.value} ${t('share.months')}` },
-    { label: t('share.shareCreated'), value: new Date(share.value.createdAt).toLocaleDateString(locale.value) },
-    { label: t('share.status'), value: share.value.acknowledgedAt ? t('share.acknowledged') : t('share.awaitingAck') },
+    { label: t('share.forecast'), value: `${payoffMonths.value} ${t('debts.installments')}`, tone: 'money' },
+    { label: t('share.status'), value: share.value.acknowledgedAt ? t('share.confirmed') : t('share.pending'), tone: share.value.acknowledgedAt ? 'good' : 'warning' },
   ];
 });
 
@@ -117,14 +116,10 @@ function saveNote() {
 <template>
   <main v-if="debt && share" class="share-workbook">
     <section v-if="isOwnerPreview" class="share-preview-bar">
-      <button class="secondary-button" type="button" @click="goBackToDebt">
-        <ArrowLeft :size="18" />
-        {{ t('share.backToDebt') }}
+      <button class="inline-back-button" type="button" :aria-label="t('share.backToDebt')" @click="goBackToDebt">
+        <ArrowLeft :size="20" />
+        <span>{{ t('nav.back') }}</span>
       </button>
-      <div>
-        <strong>{{ t('share.previewTitle') }}</strong>
-        <span>{{ t('share.previewBody') }}</span>
-      </div>
       <button class="primary-button" type="button" @click="copyLink">
         <Copy :size="18" />
         {{ copied ? t('share.copied') : t('share.copyPublicLink') }}
@@ -148,7 +143,10 @@ function saveNote() {
 
     <section class="share-summary">
       <article class="share-balance-card">
-        <span>{{ t('share.remainingBalance') }}</span>
+        <div class="share-card-label">
+          <WalletCards :size="18" />
+          <span>{{ t('share.remainingBalance') }}</span>
+        </div>
         <strong>{{ money.format(debt.remainingAmount) }}</strong>
         <div class="progress">
           <span :style="{ display: 'block', width: `${progress}%` }" />
@@ -157,13 +155,19 @@ function saveNote() {
       </article>
 
       <article class="share-mini-card">
-        <span>{{ t('share.minimumPayment') }}</span>
+        <div class="share-card-label">
+          <BadgeDollarSign :size="18" />
+          <span>{{ t('share.minimumPayment') }}</span>
+        </div>
         <strong>{{ money.format(debt.minimumPayment) }}</strong>
       </article>
 
       <article class="share-mini-card">
-        <span>{{ t('share.forecast') }}</span>
-        <strong>{{ payoffMonths }} {{ t('share.months') }}</strong>
+        <div class="share-card-label">
+          <CalendarClock :size="18" />
+          <span>{{ t('share.forecast') }}</span>
+        </div>
+        <strong>{{ payoffMonths }} {{ t('debts.installments') }}</strong>
       </article>
     </section>
 
@@ -173,27 +177,33 @@ function saveNote() {
         <strong>{{ debt.lender }}</strong>
       </div>
 
-      <div class="share-detail-grid">
-        <div v-for="row in detailRows" :key="row.label" class="share-detail-cell">
+      <div class="share-detail-table">
+        <div v-for="row in detailRows" :key="row.label" class="share-detail-row">
           <span>{{ row.label }}</span>
-          <strong>{{ row.value }}</strong>
+          <strong :class="row.tone ? `tone-${row.tone}` : undefined">{{ row.value }}</strong>
         </div>
       </div>
     </section>
 
-    <section class="share-statement-panel">
-      <div class="share-section-heading">
-        <span>{{ t('share.paymentLedger') }}</span>
-        <strong>{{ paymentRows.length }} {{ t('share.rows') }}</strong>
+    <section class="share-statement-panel share-ledger-panel">
+      <div class="share-section-heading share-ledger-heading">
+        <strong>{{ t('share.paymentLedger') }}</strong>
       </div>
 
       <div class="share-payment-list">
         <article v-for="(row, index) in paymentRows" :key="`${row.date}-${index}`" class="share-payment-row">
-          <div>
-            <strong>{{ row.type }}</strong>
-            <span>{{ row.date }} · {{ row.status }}</span>
+          <div class="share-payment-marker" :class="{ confirmed: row.confirmed }">
+            <CheckCircle2 v-if="row.confirmed" :size="18" />
+            <Circle v-else :size="18" />
           </div>
-          <div>
+          <div class="share-payment-main">
+            <div>
+              <strong>{{ row.type }}</strong>
+              <span>{{ row.date }}</span>
+            </div>
+            <span class="share-status-pill" :class="{ confirmed: row.confirmed }">{{ row.status }}</span>
+          </div>
+          <div class="share-payment-amount">
             <strong>{{ money.format(row.amount) }}</strong>
             <span>{{ t('share.balanceAfter') }} {{ money.format(row.balance) }}</span>
           </div>
@@ -202,21 +212,27 @@ function saveNote() {
     </section>
 
     <section class="share-actions-grid">
-      <article class="panel">
-        <h2>{{ t('share.lenderActions') }}</h2>
-        <div class="actions">
-          <button class="primary-button" type="button" @click="store.acknowledgeDebtShare(shareId)">
-            <CheckCircle2 :size="18" />
-            {{ share.acknowledgedAt ? t('share.acknowledged') : t('share.acknowledge') }}
-          </button>
-        </div>
-      </article>
+      <button
+        class="share-check-action"
+        :class="{ checked: share.acknowledgedAt }"
+        type="button"
+        @click="store.acknowledgeDebtShare(shareId)"
+      >
+        <CheckCircle2 :size="18" />
+        <span>{{ share.acknowledgedAt ? t('share.acknowledged') : t('share.acknowledge') }}</span>
+      </button>
 
-      <article class="panel">
-        <h2>{{ t('share.lenderComment') }}</h2>
+      <article class="share-action-card">
+        <div class="share-action-icon">
+          <MessageSquareText :size="22" />
+        </div>
+        <div>
+          <h2>{{ t('share.lenderComment') }}</h2>
+          <p>{{ t('share.commentPlaceholder') }}</p>
+        </div>
         <label>
-          <span>{{ t('share.commentPlaceholder') }}</span>
-          <input v-model="noteDraft" type="text" />
+          <span>{{ t('share.notesTab') }}</span>
+          <textarea v-model="noteDraft" rows="3" />
         </label>
         <div class="actions" style="margin-top: 12px">
           <button class="secondary-button" type="button" @click="saveNote">{{ t('share.saveComment') }}</button>

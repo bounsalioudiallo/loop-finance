@@ -34,6 +34,7 @@ function approve() {
   <AppPageHeader
     :title="income ? t('allocation.title', { amount: money.format(income.amount) }) : t('allocation.missing')"
     :subtitle="t('allocation.subtitle')"
+    back-to="/income/new"
     show-back
   />
 

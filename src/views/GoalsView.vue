@@ -40,7 +40,7 @@ function addGoal() {
 </script>
 
 <template>
-  <AppPageHeader :title="t('goals.title')" :subtitle="t('goals.subtitle')" show-back />
+  <AppPageHeader :title="t('goals.title')" :subtitle="t('goals.subtitle')" />
 
   <section class="section-stack">
     <form class="form-panel" @submit.prevent="addGoal">

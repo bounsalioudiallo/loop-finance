@@ -3,22 +3,30 @@ import { ArrowLeft } from '@lucide/vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
-defineProps<{
-  title: string;
-  subtitle?: string;
-  showBack?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    title: string;
+    subtitle?: string;
+    showBack?: boolean;
+    backTo?: string;
+  }>(),
+  {
+    backTo: '/',
+  },
+);
 
 const router = useRouter();
 const { t } = useI18n();
 
 function goBack() {
-  if (window.history.length > 1) {
+  const previousPath = window.history.state?.back;
+
+  if (typeof previousPath === 'string' && previousPath.length > 0) {
     router.back();
     return;
   }
 
-  router.push('/');
+  router.push(props.backTo);
 }
 </script>
 

@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
+  TrendingUp,
   UserCircle,
   X,
 } from '@lucide/vue';
@@ -27,8 +28,10 @@ const navItems = computed(() => [
   { path: '/income/new', label: t('nav.income'), icon: CircleDollarSign },
 ]);
 
-const showBottomNav = computed(() => route.path !== '/login' && !route.path.startsWith('/debt/share'));
-const showTopActions = computed(() => !route.path.startsWith('/debt/share') || route.query.preview === 'owner');
+const isDebtShareRoute = computed(() => route.path.startsWith('/debt/share'));
+const isOwnerPreview = computed(() => route.query.preview === 'owner');
+const showBottomNav = computed(() => route.path !== '/login' && (!isDebtShareRoute.value || isOwnerPreview.value));
+const showTopActions = computed(() => !isDebtShareRoute.value || isOwnerPreview.value);
 
 const drawerItems = computed(() => [
   { path: '/settings', label: t('nav.settings'), description: t('drawer.settings'), icon: Settings },
@@ -36,6 +39,7 @@ const drawerItems = computed(() => [
   { path: '/goals', label: t('nav.goals'), description: t('drawer.goals'), icon: Flag },
   { path: '/debts', label: t('nav.debts'), description: t('drawer.debts'), icon: Banknote },
   { path: '/rules', label: t('nav.rules'), description: t('drawer.rules'), icon: ShieldCheck },
+  { path: '/forecast', label: t('nav.forecast'), description: t('drawer.forecast'), icon: TrendingUp },
   { path: '/login', label: auth.state.isAuthenticated ? t('auth.account') : t('auth.login'), description: t('drawer.account'), icon: UserCircle },
 ]);
 

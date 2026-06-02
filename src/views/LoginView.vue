@@ -26,7 +26,7 @@ function submit() {
 </script>
 
 <template>
-  <AppPageHeader class="auth-hero" :title="t('auth.title')" :subtitle="t('auth.subtitle')" show-back />
+  <AppPageHeader class="auth-hero" :title="t('auth.title')" :subtitle="t('auth.subtitle')" />
 
   <form class="form-panel auth-panel" @submit.prevent="submit">
     <div class="form-grid">

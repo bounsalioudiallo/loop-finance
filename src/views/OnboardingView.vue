@@ -31,7 +31,7 @@ function save() {
 </script>
 
 <template>
-  <AppPageHeader :title="t('onboarding.title')" :subtitle="t('onboarding.subtitle')" show-back />
+  <AppPageHeader :title="t('onboarding.title')" :subtitle="t('onboarding.subtitle')" />
 
   <form class="form-panel" @submit.prevent="save">
     <div class="form-grid">

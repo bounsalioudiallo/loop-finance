@@ -9,6 +9,7 @@ import RulesView from '@/views/RulesView.vue';
 import LoginView from '@/views/LoginView.vue';
 import SettingsView from '@/views/SettingsView.vue';
 import DebtShareView from '@/views/DebtShareView.vue';
+import ForecastView from '@/views/ForecastView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +23,7 @@ export const router = createRouter({
     { path: '/debts', name: 'debts', component: DebtsView },
     { path: '/debt/share/:shareId', name: 'debt-share', component: DebtShareView },
     { path: '/rules', name: 'rules', component: RulesView },
+    { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/settings', name: 'settings', component: SettingsView },
   ],
 });

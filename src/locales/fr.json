@@ -12,6 +12,7 @@
     "goals": "Objectifs",
     "debts": "Dettes",
     "rules": "Règles",
+    "forecast": "Prévision",
     "settings": "Réglages",
     "menu": "Menu",
     "back": "Retour",
@@ -85,11 +86,24 @@
     "minimum": "Paiement minimum",
     "interest": "Taux d'intérêt",
     "dueDay": "Jour d'échéance",
+    "firstPaymentDate": "Date du premier paiement",
+    "paymentFrequency": "Fréquence de paiement",
     "add": "Ajouter une dette",
     "active": "Dettes actives",
     "left": "restant",
     "minimumShort": "minimum",
-    "share": "Ouvrir le portail partagé"
+    "share": "Ouvrir le portail partagé",
+    "planWorkshop": "Atelier du plan",
+    "repaymentPlan": "Plan de remboursement",
+    "planPayment": "Paiement",
+    "planPayoff": "Remboursement",
+    "planFrequency": "Fréquence",
+    "installments": "versements",
+    "frequencies": {
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "yearly": "Annuel"
+    }
   },
   "rules": {
     "title": "Règles",
@@ -138,7 +152,8 @@
     "setupBody": "Modifier la langue, la devise, le profil de revenu et le mode de répartition.",
     "goalsBody": "Créer et gérer les affectations futures.",
     "debtsBody": "Suivre les soldes, minimums et progrès de remboursement.",
-    "rulesBody": "Contrôler les règles fixes appliquées avant les pondérations."
+    "rulesBody": "Contrôler les règles fixes appliquées avant les pondérations.",
+    "forecastBody": "Consulter les scénarios de revenu, délais d'objectifs et pression de remboursement."
   },
   "drawer": {
     "title": "Navigation",
@@ -149,8 +164,44 @@
     "goals": "Affectations futures.",
     "debts": "Soldes, minimums et progression.",
     "rules": "Règles fixes avant les pondérations.",
+    "forecast": "Scénarios de revenu et alertes prédictives.",
     "account": "Connexion locale aujourd'hui, Firebase Auth plus tard.",
     "footer": "Les outils secondaires restent ici pour garder le flux principal clair."
+  },
+  "forecast": {
+    "title": "Prévision",
+    "subtitle": "Projetez le prochain mois à partir des revenus récents, règles, dettes et priorités d'objectifs.",
+    "expectedIncome": "Revenu mensuel attendu",
+    "mode": "Mode de répartition",
+    "activeGoals": "Objectifs actifs",
+    "activeDebts": "Dettes actives",
+    "scenarios": "Scénarios de revenu",
+    "scenarioNames": {
+      "conservative": "Conservateur",
+      "expected": "Attendu",
+      "optimistic": "Optimiste"
+    },
+    "afterDebt": "{amount} après minimums de dette",
+    "predictiveAlerts": "Alertes prédictives",
+    "goalTimelines": "Délais des objectifs",
+    "debtTimelines": "Délais des dettes",
+    "remaining": "{amount} restant",
+    "monthlyContribution": "{amount} de contribution mensuelle prévue",
+    "needsIncome": "Revenu requis",
+    "oneMonth": "1 mois",
+    "monthCount": "{count} mois",
+    "noGoals": "Aucun délai d'objectif actif pour l'instant.",
+    "noDebts": "Aucun délai de dette actif pour l'instant.",
+    "alerts": {
+      "noIncomeTitle": "Historique de revenu requis",
+      "noIncomeBody": "Ajoutez un revenu une fois et Loop pourra transformer votre profil en prévision mensuelle.",
+      "debtPressureTitle": "Les minimums de dette sont élevés",
+      "debtPressureBody": "Les paiements minimums prennent plus de 35% du revenu attendu.",
+      "incomeReadyTitle": "La prévision est prête",
+      "incomeReadyBody": "Loop peut estimer les délais d'objectifs et de dettes depuis votre configuration actuelle.",
+      "goalStallTitle": "Certains objectifs ont besoin d'espace",
+      "goalStallBody": "Un ou plusieurs objectifs actifs ne reçoivent pas de contribution mensuelle prévue."
+    }
   },
   "share": {
     "workbookTitle": "Classeur de transparence de dette",
@@ -171,12 +222,15 @@
     "lender": "Prêteur",
     "progress": "Progression",
     "dueDay": "Jour d'échéance",
+    "firstPayment": "Premier paiement",
+    "frequency": "Fréquence",
     "forecast": "Prévision",
     "status": "Statut",
     "months": "mois",
     "awaitingAck": "En attente de confirmation",
     "acknowledged": "Confirmé",
-    "paymentLedger": "Registre des paiements",
+    "pending": "En attente",
+    "paymentLedger": "Plan de paiement",
     "rows": "lignes",
     "paidBack": "remboursé",
     "date": "Date",

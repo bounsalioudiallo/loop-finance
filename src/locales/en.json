@@ -12,6 +12,7 @@
     "goals": "Goals",
     "debts": "Debts",
     "rules": "Rules",
+    "forecast": "Forecast",
     "settings": "Settings",
     "menu": "Menu",
     "back": "Back",
@@ -85,11 +86,24 @@
     "minimum": "Minimum payment",
     "interest": "Interest rate",
     "dueDay": "Due day",
+    "firstPaymentDate": "First payment date",
+    "paymentFrequency": "Payment frequency",
     "add": "Add debt",
     "active": "Active debts",
     "left": "left",
     "minimumShort": "minimum",
-    "share": "Open share portal"
+    "share": "Open share portal",
+    "planWorkshop": "Plan workshop",
+    "repaymentPlan": "Repayment plan",
+    "planPayment": "Payment",
+    "planPayoff": "Payoff",
+    "planFrequency": "Frequency",
+    "installments": "installments",
+    "frequencies": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    }
   },
   "rules": {
     "title": "Rules",
@@ -138,7 +152,8 @@
     "setupBody": "Update language, currency, income profile, and allocation mode.",
     "goalsBody": "Create and maintain future dollar assignments.",
     "debtsBody": "Track debt balances, minimums, and payoff progress.",
-    "rulesBody": "Control the hard rules that run before allocation weights."
+    "rulesBody": "Control the hard rules that run before allocation weights.",
+    "forecastBody": "Review income scenarios, goal timelines, and repayment pressure."
   },
   "drawer": {
     "title": "Navigation",
@@ -149,8 +164,44 @@
     "goals": "Future dollar assignments.",
     "debts": "Balances, minimums, and payoff progress.",
     "rules": "Hard rules before allocation weights.",
+    "forecast": "Income scenarios and predictive alerts.",
     "account": "Local login today, Firebase Auth later.",
     "footer": "Secondary tools live here so the core flow stays clear."
+  },
+  "forecast": {
+    "title": "Forecast",
+    "subtitle": "Project the next month from recent income, rules, debts, and goal priorities.",
+    "expectedIncome": "Expected monthly income",
+    "mode": "Allocation mode",
+    "activeGoals": "Active goals",
+    "activeDebts": "Active debts",
+    "scenarios": "Income scenarios",
+    "scenarioNames": {
+      "conservative": "Conservative",
+      "expected": "Expected",
+      "optimistic": "Optimistic"
+    },
+    "afterDebt": "{amount} after debt minimums",
+    "predictiveAlerts": "Predictive alerts",
+    "goalTimelines": "Goal timelines",
+    "debtTimelines": "Debt timelines",
+    "remaining": "{amount} remaining",
+    "monthlyContribution": "{amount} forecast monthly contribution",
+    "needsIncome": "Needs income",
+    "oneMonth": "1 month",
+    "monthCount": "{count} months",
+    "noGoals": "No active goal timelines yet.",
+    "noDebts": "No active debt timelines yet.",
+    "alerts": {
+      "noIncomeTitle": "Income history needed",
+      "noIncomeBody": "Log income once and Loop can turn your profile into a monthly forecast.",
+      "debtPressureTitle": "Debt minimums are high",
+      "debtPressureBody": "Minimum debt payments take more than 35% of expected income.",
+      "incomeReadyTitle": "Forecast is ready",
+      "incomeReadyBody": "Loop can estimate goal and debt timelines from your current setup.",
+      "goalStallTitle": "Some goals need allocation room",
+      "goalStallBody": "One or more active goals are not receiving a projected monthly contribution."
+    }
   },
   "share": {
     "workbookTitle": "Debt Transparency Workbook",
@@ -171,12 +222,15 @@
     "lender": "Lender",
     "progress": "Progress",
     "dueDay": "Due day",
+    "firstPayment": "First payment",
+    "frequency": "Frequency",
     "forecast": "Forecast",
     "status": "Status",
     "months": "months",
     "awaitingAck": "Awaiting acknowledgement",
     "acknowledged": "Acknowledged",
-    "paymentLedger": "Payment Ledger",
+    "pending": "Pending",
+    "paymentLedger": "Payment Plan",
     "rows": "rows",
     "paidBack": "paid back",
     "date": "Date",

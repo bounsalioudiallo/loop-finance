@@ -166,16 +166,51 @@ Goals represent future dollar assignments.
 
 ## Debt Management
 
-Users create and manage personal debt records.
+Users create and manage personal debt records and define a repayment plan before sharing anything with a lender.
 
 **Fields:**
 - Lender name
 - Original amount
 - Remaining amount
+- Installment amount
 - Interest rate
-- Due date
-- Payment frequency
+- First payment date
+- Payment frequency: weekly, monthly, or yearly
 - Notes
+
+### Debt Repayment Plan Workshop
+
+When a loan is added, Loop generates a repayment plan from:
+- Remaining balance
+- Installment amount
+- First payment date
+- Payment frequency
+
+The workshop previews:
+- Number of installments until payoff
+- Installment amount
+- Frequency
+- Upcoming installment dates
+- Balance after each installment
+
+Example:
+
+```text
+Loan: Family Loan
+Remaining balance: $800
+Installment amount: $150
+First payment: June 18, 2026
+Frequency: Monthly
+
+Plan:
+Installment 1   Jun 18   $150   Balance after: $650
+Installment 2   Jul 18   $150   Balance after: $500
+Installment 3   Aug 18   $150   Balance after: $350
+...
+Final installment   Nov 18   $50   Balance after: $0
+```
+
+The plan is currently deterministic and rule-based. Future AI features can propose revised installment amounts or frequencies, but the user must approve the plan before it is shared.
 
 ---
 
@@ -186,13 +221,13 @@ Each debt gets a unique shareable link for transparency with lenders.
 **Lender can view:**
 - Original amount
 - Remaining balance
-- Payment history
-- Upcoming payments
+- Payment plan
+- Installment frequency
+- Upcoming installment dates and balance-after amounts
 - Completion forecast
 
 **Lender can:**
-- Approve revised payment plans
-- Acknowledge received payments
+- Acknowledge the received plan
 - Leave comments
 
 **Lender cannot:**
