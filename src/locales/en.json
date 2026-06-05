@@ -133,9 +133,12 @@
     "subtitle": "Sign in locally for now. Firebase Auth will replace this screen when credentials are connected.",
     "name": "Name",
     "email": "Email",
+    "password": "Password",
     "continue": "Continue",
+    "google": "Continue with Google",
     "signOut": "Sign out",
-    "firebaseNote": "Local sign-in keeps the product flow moving while the Firebase project is still pending."
+    "error": "Authentication failed.",
+    "firebaseNote": "Firebase Auth keeps your Loop data connected to your account."
   },
   "settings": {
     "title": "Settings",
@@ -211,6 +214,11 @@
     "copyPublicLink": "Copy public link",
     "copied": "Copied",
     "copyFallback": "Copy this share link:",
+    "accessTitle": "Enter access code",
+    "accessBody": "Ask the person sharing this plan for the access code.",
+    "accessCode": "Access code",
+    "accessError": "Access code could not be verified.",
+    "unlock": "Open plan",
     "summaryTab": "Summary",
     "paymentsTab": "Payments",
     "notesTab": "Lender Notes",

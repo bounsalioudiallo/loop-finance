@@ -14,6 +14,8 @@ import {
 } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import { createDebtPaymentPlan } from '@/domain/finance';
+import type { Debt, DebtPaymentPlan } from '@/domain/finance';
+import { getProtectedDebtShare, submitProtectedDebtShareAction } from '@/services/debtShareApi';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const route = useRoute();
@@ -22,11 +24,22 @@ const { t, locale } = useI18n();
 const store = useFinanceStore();
 const noteDraft = ref('');
 const copied = ref(false);
+const accessCodeDraft = ref('');
+const accessError = ref('');
+const protectedDebt = ref<Debt | null>(null);
+const protectedPaymentPlan = ref<DebtPaymentPlan | null>(null);
+const protectedShare = ref({
+  createdAt: new Date().toISOString(),
+  lenderNote: '',
+  acknowledgedAt: undefined as string | undefined,
+});
 
 const shareId = computed(() => String(route.params.shareId));
 const isOwnerPreview = computed(() => route.query.preview === 'owner');
-const share = computed(() => store.getDebtShare(shareId.value));
-const debt = computed(() => (share.value ? store.getDebt(share.value.debtId) : undefined));
+const localShare = computed(() => store.getDebtShare(shareId.value));
+const share = computed(() => localShare.value || protectedShare.value);
+const debt = computed(() => protectedDebt.value || (localShare.value ? store.getDebt(localShare.value.debtId) : undefined));
+const hasShareAccess = computed(() => isOwnerPreview.value || Boolean(protectedDebt.value));
 const publicShareUrl = computed(() => {
   const origin = window.location.origin;
   return `${origin}/debt/share/${shareId.value}`;
@@ -56,9 +69,10 @@ const payoffMonths = computed(() => {
 });
 
 const paymentPlan = computed(() =>
-  debt.value
+  protectedPaymentPlan.value ||
+  (debt.value
     ? createDebtPaymentPlan(debt.value, { startDate: share.value?.createdAt, maxRows: 6 })
-    : null,
+    : null),
 );
 
 const paymentRows = computed(() =>
@@ -102,24 +116,96 @@ async function copyLink() {
   }, 1600);
 }
 
+async function unlockShare() {
+  accessError.value = '';
+
+  try {
+    const response = await getProtectedDebtShare({
+      shareId: shareId.value,
+      accessCode: accessCodeDraft.value,
+    });
+    const data = response.data as {
+      debt: Debt;
+      paymentPlan: DebtPaymentPlan;
+      lenderNote: string;
+      acknowledgedAt: string | null;
+    };
+
+    protectedDebt.value = data.debt;
+    protectedPaymentPlan.value = data.paymentPlan;
+    protectedShare.value.lenderNote = data.lenderNote;
+    protectedShare.value.acknowledgedAt = data.acknowledgedAt || undefined;
+  } catch {
+    accessError.value = t('share.accessError');
+  }
+}
+
 function goBackToDebt() {
   router.push('/debts');
 }
 
-function saveNote() {
+async function acknowledgeShare() {
+  if (!isOwnerPreview.value) {
+    await submitProtectedDebtShareAction({
+      shareId: shareId.value,
+      accessCode: accessCodeDraft.value,
+      acknowledge: true,
+    });
+    protectedShare.value.acknowledgedAt = new Date().toISOString();
+    return;
+  }
+
+  store.acknowledgeDebtShare(shareId.value);
+}
+
+async function saveNote() {
   if (!noteDraft.value.trim()) return;
+
+  if (!isOwnerPreview.value) {
+    await submitProtectedDebtShareAction({
+      shareId: shareId.value,
+      accessCode: accessCodeDraft.value,
+      lenderNote: noteDraft.value.trim(),
+    });
+    protectedShare.value.lenderNote = noteDraft.value.trim();
+    noteDraft.value = '';
+    return;
+  }
+
   store.saveLenderNote(shareId.value, noteDraft.value.trim());
   noteDraft.value = '';
 }
 </script>
 
 <template>
-  <main v-if="debt && share" class="share-workbook">
+  <main v-if="!hasShareAccess" class="screen">
+    <section class="page-header">
+      <h1>{{ t('share.accessTitle') }}</h1>
+      <p>{{ t('share.accessBody') }}</p>
+    </section>
+
+    <form class="form-panel auth-panel" @submit.prevent="unlockShare">
+      <label>
+        <span>{{ t('share.accessCode') }}</span>
+        <input v-model="accessCodeDraft" inputmode="numeric" type="text" />
+      </label>
+      <div class="actions" style="margin-top: 14px">
+        <button class="primary-button" type="submit">{{ t('share.unlock') }}</button>
+      </div>
+      <p v-if="accessError" class="notice" style="margin-top: 12px">{{ accessError }}</p>
+    </form>
+  </main>
+
+  <main v-else-if="debt && share" class="share-workbook">
     <section v-if="isOwnerPreview" class="share-preview-bar">
       <button class="inline-back-button" type="button" :aria-label="t('share.backToDebt')" @click="goBackToDebt">
         <ArrowLeft :size="20" />
         <span>{{ t('nav.back') }}</span>
       </button>
+      <div v-if="localShare?.accessCode" class="share-access-code">
+        <span>{{ t('share.accessCode') }}</span>
+        <strong>{{ localShare.accessCode }}</strong>
+      </div>
       <button class="primary-button" type="button" @click="copyLink">
         <Copy :size="18" />
         {{ copied ? t('share.copied') : t('share.copyPublicLink') }}
@@ -216,7 +302,7 @@ function saveNote() {
         class="share-check-action"
         :class="{ checked: share.acknowledgedAt }"
         type="button"
-        @click="store.acknowledgeDebtShare(shareId)"
+        @click="acknowledgeShare"
       >
         <CheckCircle2 :size="18" />
         <span>{{ share.acknowledgedAt ? t('share.acknowledged') : t('share.acknowledge') }}</span>

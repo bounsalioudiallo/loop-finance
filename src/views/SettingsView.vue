@@ -26,8 +26,8 @@ const managementLinks = computed(() => [
   { to: '/forecast', title: t('forecast.title'), body: t('settings.forecastBody') },
 ]);
 
-function signOut() {
-  auth.signOut();
+async function signOut() {
+  await auth.signOut();
   router.push('/login');
 }
 </script>

@@ -1,6 +1,9 @@
 import { computed, reactive, watch } from 'vue';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   createAllocationPlan,
+  createDebtPaymentPlan,
   createFinancialForecast,
   type AllocationLine,
   type AllocationMode,
@@ -11,6 +14,8 @@ import {
   type IncomeProfile,
   type UserSettings,
 } from '@/domain/finance';
+import { auth, db } from '@/services/firebase';
+import { publishDebtShare } from '@/services/debtShareApi';
 
 interface FinanceState {
   settings: UserSettings;
@@ -26,6 +31,7 @@ export interface DebtShare {
   id: string;
   debtId: string;
   createdAt: string;
+  accessCode: string;
   lenderNote: string;
   acknowledgedAt?: string;
 }
@@ -115,16 +121,73 @@ function loadState() {
       ...cloneState(defaultState).settings,
       ...parsed.settings,
     },
-    debtShares: parsed.debtShares || [],
+    debtShares: (parsed.debtShares || []).map((share) => ({
+      ...share,
+      accessCode: share.accessCode || createAccessCode(),
+    })),
   } as FinanceState;
 }
 
 const state = reactive<FinanceState>(loadState());
+let activeUser: User | null = null;
+let isHydratingFromFirestore = false;
+let saveTimer: number | undefined;
+
+function financeDoc(userId: string) {
+  return doc(db, 'users', userId, 'private', 'finance');
+}
+
+async function saveStateToFirestore(user: User) {
+  await setDoc(
+    financeDoc(user.uid),
+    {
+      ...JSON.parse(JSON.stringify(state)),
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
+}
+
+async function hydrateStateFromFirestore(user: User) {
+  const snapshot = await getDoc(financeDoc(user.uid));
+
+  if (!snapshot.exists()) {
+    await saveStateToFirestore(user);
+    return;
+  }
+
+  const data = snapshot.data() as Partial<FinanceState>;
+  isHydratingFromFirestore = true;
+
+  Object.assign(state, {
+    ...cloneState(defaultState),
+    ...data,
+    settings: {
+      ...cloneState(defaultState).settings,
+      ...data.settings,
+    },
+    debtShares: (data.debtShares || []).map((share) => ({
+      ...share,
+      accessCode: share.accessCode || createAccessCode(),
+    })),
+  });
+
+  window.setTimeout(() => {
+    isHydratingFromFirestore = false;
+  });
+}
 
 watch(
   state,
   (nextState) => {
     localStorage.setItem(storageKey, JSON.stringify(nextState));
+
+    if (!activeUser || isHydratingFromFirestore) return;
+
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      void saveStateToFirestore(activeUser!);
+    }, 500);
   },
   { deep: true },
 );
@@ -132,6 +195,17 @@ watch(
 function id(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
+
+function createAccessCode() {
+  return `${Math.floor(100000 + Math.random() * 900000)}`;
+}
+
+onAuthStateChanged(auth, (user) => {
+  activeUser = user;
+  if (!user) return;
+
+  void hydrateStateFromFirestore(user);
+});
 
 export function useFinanceStore() {
   const incomeThisMonth = computed(() =>
@@ -225,10 +299,23 @@ export function useFinanceStore() {
       id: id('share'),
       debtId,
       createdAt: new Date().toISOString(),
+      accessCode: createAccessCode(),
       lenderNote: '',
     };
 
     state.debtShares.push(share);
+
+    const debt = getDebt(debtId);
+
+    if (auth.currentUser && debt) {
+      void publishDebtShare({
+        shareId: share.id,
+        accessCode: share.accessCode,
+        debt,
+        paymentPlan: createDebtPaymentPlan(debt),
+      });
+    }
+
     return share;
   }
 

@@ -729,6 +729,28 @@ textarea {
   min-height: 40px;
 }
 
+.share-access-code {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #fff8e7;
+  border: 1px solid rgba(224, 165, 38, 0.26);
+  border-radius: 8px;
+}
+
+.share-access-code span {
+  color: #66736f;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.share-access-code strong {
+  color: #8c5b04;
+  letter-spacing: 0.04em;
+}
+
 .share-file {
   display: flex;
   align-items: center;

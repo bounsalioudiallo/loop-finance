@@ -133,9 +133,12 @@
     "subtitle": "Connectez-vous localement pour l'instant. Firebase Auth remplacera cet écran quand les identifiants seront branchés.",
     "name": "Nom",
     "email": "Email",
+    "password": "Mot de passe",
     "continue": "Continuer",
+    "google": "Continuer avec Google",
     "signOut": "Se déconnecter",
-    "firebaseNote": "La connexion locale permet d'avancer sur le produit pendant que le projet Firebase est encore en attente."
+    "error": "Échec de l'authentification.",
+    "firebaseNote": "Firebase Auth garde vos données Loop liées à votre compte."
   },
   "settings": {
     "title": "Réglages",
@@ -211,6 +214,11 @@
     "copyPublicLink": "Copier le lien public",
     "copied": "Copié",
     "copyFallback": "Copiez ce lien partagé :",
+    "accessTitle": "Entrer le code d'accès",
+    "accessBody": "Demandez le code d'accès à la personne qui partage ce plan.",
+    "accessCode": "Code d'accès",
+    "accessError": "Le code d'accès n'a pas pu être vérifié.",
+    "unlock": "Ouvrir le plan",
     "summaryTab": "Résumé",
     "paymentsTab": "Paiements",
     "notesTab": "Notes prêteur",
