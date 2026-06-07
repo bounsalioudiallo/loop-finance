@@ -3,7 +3,6 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   createAllocationPlan,
-  createDebtPaymentPlan,
   createFinancialForecast,
   type AllocationLine,
   type AllocationMode,
@@ -15,7 +14,6 @@ import {
   type UserSettings,
 } from '@/domain/finance';
 import { auth, db } from '@/services/firebase';
-import { publishDebtShare } from '@/services/debtShareApi';
 
 interface FinanceState {
   settings: UserSettings;
@@ -24,16 +22,6 @@ interface FinanceState {
   rules: FinancialRule[];
   incomeEvents: IncomeEvent[];
   allocations: AllocationLine[];
-  debtShares: DebtShare[];
-}
-
-export interface DebtShare {
-  id: string;
-  debtId: string;
-  createdAt: string;
-  accessCode: string;
-  lenderNote: string;
-  acknowledgedAt?: string;
 }
 
 const storageKey = 'loop-finance-state-v1';
@@ -46,65 +34,66 @@ const defaultState: FinanceState = {
     currency: 'USD',
     isOnboarded: false,
   },
-  goals: [
-    {
-      id: 'goal-emergency',
-      name: 'Emergency Fund',
-      currentAmount: 1200,
-      targetAmount: 5000,
-      priority: 3,
-    },
-    {
-      id: 'goal-business',
-      name: 'Business Fund',
-      currentAmount: 450,
-      targetAmount: 3000,
-      priority: 2,
-    },
-    {
-      id: 'goal-savings',
-      name: 'Savings',
-      currentAmount: 200,
-      targetAmount: 2500,
-      priority: 2,
-    },
-  ],
-  debts: [
-    {
-      id: 'debt-family-loan',
-      lender: 'Family Loan',
-      originalAmount: 2200,
-      remainingAmount: 800,
-      minimumPayment: 150,
-      interestRate: 0,
-      dueDay: 18,
-      firstPaymentDate: '2026-06-18',
-      paymentFrequency: 'monthly',
-    },
-  ],
-  rules: [
-    {
-      id: 'rule-family',
-      label: 'Always send $100 home first.',
-      category: 'Family Support',
-      type: 'fixed',
-      value: 100,
-    },
-    {
-      id: 'rule-savings',
-      label: 'At least 10% goes to savings.',
-      category: 'Savings Floor',
-      type: 'minimumPercent',
-      value: 10,
-    },
-  ],
+  goals: [],
+  debts: [],
+  rules: [],
   incomeEvents: [],
   allocations: [],
-  debtShares: [],
 };
+
+const demoGoalIds = new Set(['goal-emergency', 'goal-business', 'goal-savings']);
+const demoDebtIds = new Set(['debt-family-loan']);
+const demoRuleIds = new Set(['rule-family', 'rule-savings']);
+const demoAllocationLabels = new Set([
+  'Emergency Fund',
+  'Business Fund',
+  'Savings',
+  'Family Loan minimum',
+  'Family Loan extra',
+  'Family Support',
+  'Savings Floor',
+]);
 
 function cloneState(value: FinanceState): FinanceState {
   return JSON.parse(JSON.stringify(value)) as FinanceState;
+}
+
+function normalizeState(input: Partial<FinanceState>) {
+  return {
+    ...cloneState(defaultState),
+    ...input,
+    goals: input.goals || [],
+    debts: input.debts || [],
+    rules: input.rules || [],
+    incomeEvents: input.incomeEvents || [],
+    allocations: input.allocations || [],
+    settings: {
+      ...cloneState(defaultState).settings,
+      ...input.settings,
+    },
+  } as FinanceState;
+}
+
+function removeDemoSeedData(input: FinanceState) {
+  const stateWithoutDemo = {
+    ...input,
+    goals: input.goals.filter((goal) => !demoGoalIds.has(goal.id)),
+    debts: input.debts.filter((debt) => !demoDebtIds.has(debt.id)),
+    rules: input.rules.filter((rule) => !demoRuleIds.has(rule.id)),
+    allocations: input.allocations.filter((line) => {
+      if (demoAllocationLabels.has(line.label)) return false;
+      if (line.id.includes('goal-emergency')) return false;
+      if (line.id.includes('goal-business')) return false;
+      if (line.id.includes('goal-savings')) return false;
+      if (line.id.includes('debt-family-loan')) return false;
+      if (line.id.includes('rule-family')) return false;
+      if (line.id.includes('rule-savings')) return false;
+      return true;
+    }),
+  };
+  const migrated = JSON.stringify(stateWithoutDemo) !== JSON.stringify(input);
+
+  return { state: stateWithoutDemo, migrated };
 }
 
 function loadState() {
@@ -113,19 +102,13 @@ function loadState() {
   if (!saved) return cloneState(defaultState);
 
   const parsed = JSON.parse(saved) as Partial<FinanceState>;
+  const { state: nextState, migrated } = removeDemoSeedData(normalizeState(parsed));
 
-  return {
-    ...cloneState(defaultState),
-    ...parsed,
-    settings: {
-      ...cloneState(defaultState).settings,
-      ...parsed.settings,
-    },
-    debtShares: (parsed.debtShares || []).map((share) => ({
-      ...share,
-      accessCode: share.accessCode || createAccessCode(),
-    })),
-  } as FinanceState;
+  if (migrated) {
+    localStorage.setItem(storageKey, JSON.stringify(nextState));
+  }
+
+  return nextState;
 }
 
 const state = reactive<FinanceState>(loadState());
@@ -157,23 +140,17 @@ async function hydrateStateFromFirestore(user: User) {
   }
 
   const data = snapshot.data() as Partial<FinanceState>;
+  const { state: nextState, migrated } = removeDemoSeedData(normalizeState(data));
   isHydratingFromFirestore = true;
 
-  Object.assign(state, {
-    ...cloneState(defaultState),
-    ...data,
-    settings: {
-      ...cloneState(defaultState).settings,
-      ...data.settings,
-    },
-    debtShares: (data.debtShares || []).map((share) => ({
-      ...share,
-      accessCode: share.accessCode || createAccessCode(),
-    })),
-  });
+  Object.assign(state, nextState);
+  localStorage.setItem(storageKey, JSON.stringify(nextState));
 
   window.setTimeout(() => {
     isHydratingFromFirestore = false;
+    if (migrated) {
+      void saveStateToFirestore(user);
+    }
   });
 }
 
@@ -196,10 +173,6 @@ function id(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
-function createAccessCode() {
-  return `${Math.floor(100000 + Math.random() * 900000)}`;
-}
-
 onAuthStateChanged(auth, (user) => {
   activeUser = user;
   if (!user) return;
@@ -217,12 +190,14 @@ export function useFinanceStore() {
   );
 
   const healthScore = computed(() => {
+    if (state.goals.length === 0 && state.debts.length === 0) return null;
+
     const goalProgress =
-      state.goals.reduce((total, goal) => total + goal.currentAmount / goal.targetAmount, 0) /
+      state.goals.reduce((total, goal) => total + goal.currentAmount / Math.max(goal.targetAmount, 1), 0) /
       Math.max(state.goals.length, 1);
     const debtProgress =
       state.debts.reduce(
-        (total, debt) => total + (1 - debt.remainingAmount / debt.originalAmount),
+        (total, debt) => total + (1 - debt.remainingAmount / Math.max(debt.originalAmount, 1)),
         0,
       ) / Math.max(state.debts.length, 1);
 
@@ -261,7 +236,6 @@ export function useFinanceStore() {
 
   function removeDebt(debtId: string) {
     state.debts = state.debts.filter((debt) => debt.id !== debtId);
-    state.debtShares = state.debtShares.filter((share) => share.debtId !== debtId);
   }
 
   function removeRule(ruleId: string) {
@@ -288,53 +262,6 @@ export function useFinanceStore() {
 
   function getDebt(debtId: string) {
     return state.debts.find((debt) => debt.id === debtId);
-  }
-
-  function createDebtShare(debtId: string) {
-    const existingShare = state.debtShares.find((share) => share.debtId === debtId);
-
-    if (existingShare) return existingShare;
-
-    const share: DebtShare = {
-      id: id('share'),
-      debtId,
-      createdAt: new Date().toISOString(),
-      accessCode: createAccessCode(),
-      lenderNote: '',
-    };
-
-    state.debtShares.push(share);
-
-    const debt = getDebt(debtId);
-
-    if (auth.currentUser && debt) {
-      void publishDebtShare({
-        shareId: share.id,
-        accessCode: share.accessCode,
-        debt,
-        paymentPlan: createDebtPaymentPlan(debt),
-      });
-    }
-
-    return share;
-  }
-
-  function getDebtShare(shareId: string) {
-    return state.debtShares.find((share) => share.id === shareId);
-  }
-
-  function saveLenderNote(shareId: string, note: string) {
-    const share = getDebtShare(shareId);
-    if (!share) return;
-
-    share.lenderNote = note;
-  }
-
-  function acknowledgeDebtShare(shareId: string) {
-    const share = getDebtShare(shareId);
-    if (!share) return;
-
-    share.acknowledgedAt = new Date().toISOString();
   }
 
   function previewAllocation(incomeId: string) {
@@ -385,10 +312,6 @@ export function useFinanceStore() {
     removeRule,
     addIncomeEvent,
     getDebt,
-    createDebtShare,
-    getDebtShare,
-    saveLenderNote,
-    acknowledgeDebtShare,
     getIncomeEvent,
     previewAllocation,
     approveAllocation,

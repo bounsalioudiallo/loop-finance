@@ -1,8 +1,11 @@
 import { computed, reactive, watch } from 'vue';
 import {
+  type ConfirmationResult,
   GoogleAuthProvider,
+  RecaptchaVerifier,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  signInWithPhoneNumber,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -32,6 +35,7 @@ function loadState() {
 
 const state = reactive<AuthState>(loadState());
 let authReady = false;
+let phoneConfirmation: ConfirmationResult | null = null;
 
 watch(
   state,
@@ -55,20 +59,21 @@ export function useAuthStore() {
     return state.email.slice(0, 2).toUpperCase() || 'LF';
   });
 
-  async function signIn(input: { displayName: string; email: string; password: string }) {
+  async function signIn(input: { displayName?: string; email: string; password: string }) {
     const email = input.email.trim();
     const password = input.password;
+    const fallbackName = input.displayName?.trim() || email.split('@')[0] || 'Loop user';
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       state.uid = credential.user.uid;
-      state.displayName = credential.user.displayName || input.displayName.trim() || email.split('@')[0] || 'Loop user';
+      state.displayName = credential.user.displayName || fallbackName;
       state.email = credential.user.email || email;
       state.isAuthenticated = true;
     } catch {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       state.uid = credential.user.uid;
-      state.displayName = credential.user.displayName || input.displayName.trim() || email.split('@')[0] || 'Loop user';
+      state.displayName = credential.user.displayName || fallbackName;
       state.email = credential.user.email || email;
       state.isAuthenticated = true;
     }
@@ -78,6 +83,31 @@ export function useAuthStore() {
     const credential = await signInWithPopup(auth, new GoogleAuthProvider());
     state.uid = credential.user.uid;
     state.displayName = credential.user.displayName || credential.user.email?.split('@')[0] || 'Loop user';
+    state.email = credential.user.email || '';
+    state.isAuthenticated = true;
+  }
+
+  async function sendPhoneCode(phoneNumber: string) {
+    let verifier = window.recaptchaVerifier;
+
+    if (!verifier) {
+      verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+      });
+      window.recaptchaVerifier = verifier;
+    }
+
+    phoneConfirmation = await signInWithPhoneNumber(auth, phoneNumber.trim(), verifier);
+  }
+
+  async function confirmPhoneCode(code: string) {
+    if (!phoneConfirmation) {
+      throw new Error('Verification code has not been requested.');
+    }
+
+    const credential = await phoneConfirmation.confirm(code.trim());
+    state.uid = credential.user.uid;
+    state.displayName = credential.user.phoneNumber || 'Loop user';
     state.email = credential.user.email || '';
     state.isAuthenticated = true;
   }
@@ -107,6 +137,14 @@ export function useAuthStore() {
     initials,
     signIn,
     signInWithGoogle,
+    sendPhoneCode,
+    confirmPhoneCode,
     signOut,
   };
+}
+
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+  }
 }

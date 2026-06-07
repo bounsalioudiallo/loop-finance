@@ -1,25 +1,40 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { CalendarClock, ListChecks, WalletCards } from '@lucide/vue';
+import { Copy, Link2, MessageSquareText, Plus, Users, WalletCards } from '@lucide/vue';
 import AppPageHeader from '@/components/AppPageHeader.vue';
-import { createDebtPaymentPlan, type Debt, type PaymentFrequency } from '@/domain/finance';
+import type { PaymentFrequency } from '@/domain/finance';
+import {
+  createDebtSpaceInvite,
+  watchDebtSpaces,
+  type DebtSpace,
+} from '@/services/debtSpaceApi';
+import { useAuthStore } from '@/stores/authStore';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
-const router = useRouter();
+const auth = useAuthStore();
 const store = useFinanceStore();
+const router = useRouter();
 const today = new Date().toISOString().slice(0, 10);
+const spaces = ref<DebtSpace[]>([]);
+const isLoading = ref(false);
+const error = ref('');
+const inviteUrl = ref('');
+const copied = ref(false);
+let unsubscribeSpaces: (() => void) | undefined;
 
 const form = reactive({
-  lender: '',
-  originalAmount: '1000',
-  remainingAmount: '1000',
+  title: '',
+  counterpartyName: '',
+  principalAmount: '1000',
+  currentBalance: '1000',
   minimumPayment: '100',
   interestRate: '0',
   firstPaymentDate: today,
   paymentFrequency: 'monthly' as PaymentFrequency,
+  openingNote: '',
 });
 
 const money = computed(
@@ -30,55 +45,134 @@ const money = computed(
     }),
 );
 
-function addDebt() {
-  if (!form.lender.trim()) return;
-  const [, , firstPaymentDay] = form.firstPaymentDate.split('-').map(Number);
+watch(
+  () => auth.state.uid,
+  (uid) => {
+    unsubscribeSpaces?.();
+    spaces.value = [];
 
-  store.addDebt({
-    lender: form.lender.trim(),
-    originalAmount: Number(form.originalAmount) || 1,
-    remainingAmount: Number(form.remainingAmount) || 0,
-    minimumPayment: Number(form.minimumPayment) || 0,
-    interestRate: Number(form.interestRate) || 0,
-    dueDay: firstPaymentDay || 1,
-    firstPaymentDate: form.firstPaymentDate,
-    paymentFrequency: form.paymentFrequency,
-  });
+    if (!uid) return;
 
-  form.lender = '';
+    unsubscribeSpaces = watchDebtSpaces(uid, (nextSpaces) => {
+      spaces.value = nextSpaces;
+    });
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  unsubscribeSpaces?.();
+});
+
+function balanceFor(space: DebtSpace) {
+  return Math.max(0, space.currentBalance);
 }
 
-function openSharePortal(debtId: string) {
-  const share = store.createDebtShare(debtId);
-  router.push(`/debt/share/${share.id}?preview=owner`);
+function paidProgress(space: DebtSpace) {
+  const paid = Math.max(0, space.principalAmount - balanceFor(space));
+  return Math.round((paid / Math.max(space.principalAmount, 1)) * 100);
 }
 
-function planFor(debt: Debt) {
-  return createDebtPaymentPlan(debt, { maxRows: 3 });
+function memberNames(space: DebtSpace) {
+  return space.memberIds
+    .map((memberId) => space.memberProfiles?.[memberId]?.displayName || t('debts.member'))
+    .join(' + ');
 }
 
-function formatPlanDate(date: string) {
-  return new Date(date).toLocaleDateString(locale.value, { month: 'short', day: 'numeric' });
+async function createSpace() {
+  if (!auth.state.isAuthenticated) {
+    router.push(`/login?redirect=${encodeURIComponent('/debts')}`);
+    return;
+  }
+
+  if (!form.title.trim()) return;
+
+  isLoading.value = true;
+  error.value = '';
+  inviteUrl.value = '';
+
+  try {
+    const response = await createDebtSpaceInvite({
+      title: form.title.trim(),
+      counterpartyName: form.counterpartyName.trim(),
+      currency: store.state.settings.currency,
+      principalAmount: Number(form.principalAmount) || 0,
+      currentBalance: Number(form.currentBalance) || 0,
+      minimumPayment: Number(form.minimumPayment) || 0,
+      interestRate: Number(form.interestRate) || 0,
+      firstPaymentDate: form.firstPaymentDate,
+      paymentFrequency: form.paymentFrequency,
+      openingNote: form.openingNote.trim(),
+    });
+
+    inviteUrl.value = `${window.location.origin}/debt/invite/${response.spaceId}?token=${encodeURIComponent(response.inviteToken)}`;
+    form.title = '';
+    form.counterpartyName = '';
+    form.openingNote = '';
+  } catch (event) {
+    error.value = event instanceof Error ? event.message : t('debts.createError');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function copyInvite() {
+  if (!inviteUrl.value) return;
+  copied.value = true;
+
+  try {
+    await navigator.clipboard.writeText(inviteUrl.value);
+  } catch {
+    window.prompt(t('share.copyFallback'), inviteUrl.value);
+  }
+
+  window.setTimeout(() => {
+    copied.value = false;
+  }, 1600);
 }
 </script>
 
 <template>
   <AppPageHeader :title="t('debts.title')" :subtitle="t('debts.subtitle')" />
 
-  <section class="section-stack">
-    <form class="form-panel debt-form-panel" @submit.prevent="addDebt">
+  <section v-if="!auth.state.isAuthenticated" class="empty-state debt-auth-state">
+    <Users :size="34" />
+    <h2>{{ t('debts.loginTitle') }}</h2>
+    <p>{{ t('debts.loginBody') }}</p>
+    <RouterLink class="primary-button" :to="`/login?redirect=${encodeURIComponent('/debts')}`">
+      {{ t('auth.google') }}
+    </RouterLink>
+  </section>
+
+  <section v-else class="debt-space-layout">
+    <form class="form-panel debt-space-form" @submit.prevent="createSpace">
+      <div class="debt-space-form-title">
+        <div>
+          <p class="eyebrow">{{ t('debts.createEyebrow') }}</p>
+          <h2>{{ t('debts.createTitle') }}</h2>
+        </div>
+        <button class="primary-button" type="submit" :disabled="isLoading">
+          <Plus :size="18" />
+          {{ isLoading ? t('auth.working') : t('debts.create') }}
+        </button>
+      </div>
+
       <div class="form-grid debt-form-grid">
         <label class="debt-form-full">
-          <span>{{ t('debts.lender') }}</span>
-          <input v-model="form.lender" placeholder="Family Loan" type="text" />
+          <span>{{ t('debts.spaceTitle') }}</span>
+          <input v-model="form.title" placeholder="Nephew loan" type="text" />
+        </label>
+        <label>
+          <span>{{ t('debts.counterparty') }}</span>
+          <input v-model="form.counterpartyName" placeholder="John" type="text" />
         </label>
         <label>
           <span>{{ t('debts.original') }}</span>
-          <input v-model="form.originalAmount" inputmode="decimal" type="text" />
+          <input v-model="form.principalAmount" inputmode="decimal" type="text" />
         </label>
         <label>
           <span>{{ t('debts.remaining') }}</span>
-          <input v-model="form.remainingAmount" inputmode="decimal" type="text" />
+          <input v-model="form.currentBalance" inputmode="decimal" type="text" />
         </label>
         <label>
           <span>{{ t('debts.minimum') }}</span>
@@ -100,71 +194,68 @@ function formatPlanDate(date: string) {
             <option value="yearly">{{ t('debts.frequencies.yearly') }}</option>
           </select>
         </label>
+        <label class="debt-form-full">
+          <span>{{ t('debts.openingNote') }}</span>
+          <textarea v-model="form.openingNote" :placeholder="t('debts.openingNotePlaceholder')" rows="4" />
+        </label>
       </div>
-      <div class="actions" style="margin-top: 18px">
-        <button class="primary-button" type="submit">{{ t('debts.add') }}</button>
+
+      <p v-if="error" class="notice">{{ error }}</p>
+
+      <div v-if="inviteUrl" class="debt-invite-result">
+        <Link2 :size="20" />
+        <span>{{ inviteUrl }}</span>
+        <button class="secondary-button" type="button" @click="copyInvite">
+          <Copy :size="17" />
+          {{ copied ? t('share.copied') : t('share.copyLink') }}
+        </button>
       </div>
     </form>
 
-    <article class="panel">
-      <h2>{{ t('debts.active') }}</h2>
-      <div class="data-list">
-        <div v-for="debt in store.state.debts" :key="debt.id" class="data-row">
-          <div class="row-main">
-            <div>
-              <strong>{{ debt.lender }}</strong>
-              <small>
-                {{ money.format(debt.remainingAmount) }} {{ t('debts.left') }}
-                · {{ money.format(debt.minimumPayment) }} {{ t('debts.minimumShort') }}
-              </small>
+    <section class="panel debt-space-panel">
+      <div class="debt-space-section-heading">
+        <div>
+          <p class="eyebrow">{{ t('debts.boardEyebrow') }}</p>
+          <h2>{{ t('debts.sharedSpaces') }}</h2>
+        </div>
+        <span>{{ spaces.length }}</span>
+      </div>
+
+      <div v-if="spaces.length === 0" class="empty-state compact">
+        <MessageSquareText :size="30" />
+        <h3>{{ t('debts.emptySpacesTitle') }}</h3>
+        <p>{{ t('debts.emptySpacesBody') }}</p>
+      </div>
+
+      <div v-else class="debt-space-list">
+        <RouterLink
+          v-for="space in spaces"
+          :key="space.id"
+          class="debt-space-card"
+          :to="`/debts/${space.id}`"
+        >
+          <div class="debt-space-card-main">
+            <div class="debt-space-icon">
+              <WalletCards :size="22" />
             </div>
-            <button class="danger-button" type="button" @click="store.removeDebt(debt.id)">
-              {{ t('actions.delete') }}
-            </button>
+            <div>
+              <strong>{{ space.title }}</strong>
+              <small>{{ memberNames(space) }}</small>
+            </div>
+          </div>
+          <div class="debt-space-card-metrics">
+            <span>{{ t('share.remainingBalance') }}</span>
+            <strong>{{ money.format(balanceFor(space)) }}</strong>
           </div>
           <div class="progress">
-            <span :style="{ display: 'block', width: `${Math.min(100, (1 - debt.remainingAmount / debt.originalAmount) * 100)}%` }" />
+            <span :style="{ display: 'block', width: `${paidProgress(space)}%` }" />
           </div>
-
-          <section class="debt-plan-workshop">
-            <div class="debt-plan-heading">
-              <div>
-                <span>{{ t('debts.planWorkshop') }}</span>
-                <strong>{{ t('debts.repaymentPlan') }}</strong>
-              </div>
-              <small>{{ planFor(debt).monthsToPayoff }} {{ t('debts.installments') }}</small>
-            </div>
-
-            <div class="debt-plan-metrics">
-              <div>
-                <WalletCards :size="17" />
-                <span>{{ t('debts.planPayment') }}</span>
-                <strong>{{ money.format(planFor(debt).paymentAmount) }}</strong>
-              </div>
-              <div>
-                <CalendarClock :size="17" />
-                <span>{{ t('debts.planFrequency') }}</span>
-                <strong>{{ t(`debts.frequencies.${debt.paymentFrequency || 'monthly'}`) }}</strong>
-              </div>
-            </div>
-
-            <div class="debt-plan-list">
-              <div v-for="row in planFor(debt).rows" :key="`${debt.id}-${row.month}`" class="debt-plan-row">
-                <ListChecks :size="17" />
-                <span>{{ formatPlanDate(row.dueDate) }}</span>
-                <strong>{{ money.format(row.amount) }}</strong>
-                <small>{{ money.format(row.balanceAfter) }} {{ t('debts.left') }}</small>
-              </div>
-            </div>
-          </section>
-
-          <div class="actions">
-            <button class="secondary-button" type="button" @click="openSharePortal(debt.id)">
-              {{ t('debts.share') }}
-            </button>
+          <div class="debt-space-card-footer">
+            <span>{{ paidProgress(space) }}% {{ t('share.paidBack') }}</span>
+            <span>{{ t(`debts.frequencies.${space.paymentFrequency}`) }}</span>
           </div>
-        </div>
+        </RouterLink>
       </div>
-    </article>
+    </section>
   </section>
 </template>

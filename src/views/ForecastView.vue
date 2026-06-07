@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { AlertTriangle, CheckCircle2, TrendingUp } from '@lucide/vue';
+import { AlertTriangle, CheckCircle2, Sparkles, TrendingUp } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import AppPageHeader from '@/components/AppPageHeader.vue';
+import { explainForecast, type AiReview } from '@/services/aiApi';
 import { useFinanceStore } from '@/stores/financeStore';
 
 const { t, locale } = useI18n();
 const store = useFinanceStore();
+const aiReview = ref<AiReview | null>(null);
+const aiLoading = ref(false);
+const aiError = ref('');
 
 const money = computed(
   () =>
@@ -26,6 +30,42 @@ function timelineLabel(months: number | null) {
 
   return t('forecast.monthCount', { count: months });
 }
+
+async function loadAiReview() {
+  aiLoading.value = true;
+  aiError.value = '';
+
+  try {
+    aiReview.value = await explainForecast({
+      forecast: forecast.value,
+      locale: locale.value,
+      context: {
+        settings: store.state.settings,
+        goals: store.state.goals,
+        debts: store.state.debts,
+        rules: store.state.rules,
+      },
+    });
+  } catch (error) {
+    aiError.value = error instanceof Error ? error.message : t('forecast.ai.error');
+  } finally {
+    aiLoading.value = false;
+  }
+}
+
+watch(
+  () =>
+    JSON.stringify({
+      locale: locale.value,
+      forecast: forecast.value,
+    }),
+  () => {
+    aiReview.value = null;
+    aiError.value = '';
+    void loadAiReview();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -48,6 +88,68 @@ function timelineLabel(months: number | null) {
       <div class="metric">
         <span>{{ t('forecast.activeDebts') }}</span>
         <strong>{{ forecast.debtForecasts.length }}</strong>
+      </div>
+    </article>
+
+    <article class="panel ai-review-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">{{ t('forecast.ai.eyebrow') }}</p>
+          <h2>{{ t('forecast.ai.title') }}</h2>
+        </div>
+        <Sparkles :size="20" />
+      </div>
+
+      <div v-if="aiLoading" class="ai-review-loading">
+        {{ t('forecast.ai.loading') }}
+      </div>
+
+      <div v-else-if="aiReview" class="ai-review-content">
+        <section class="ai-review-summary">
+          <h3>{{ t('forecast.ai.summary') }}</h3>
+          <p>{{ aiReview.summary }}</p>
+        </section>
+
+        <div class="ai-review-grid">
+          <section class="ai-review-section ai-review-positive">
+            <div class="ai-review-section-heading">
+              <CheckCircle2 :size="18" />
+              <h3>{{ t('forecast.ai.whatLooksGood') }}</h3>
+            </div>
+            <ul>
+              <li v-for="item in aiReview.positives" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+
+          <section class="ai-review-section ai-review-risk">
+            <div class="ai-review-section-heading">
+              <AlertTriangle :size="18" />
+              <h3>{{ t('forecast.ai.risks') }}</h3>
+            </div>
+            <ul>
+              <li v-for="item in aiReview.risks" :key="item">{{ item }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="ai-review-section ai-review-actions">
+          <h3>{{ t('forecast.ai.nextActions') }}</h3>
+          <ul>
+            <li v-for="item in aiReview.suggestedActions" :key="item">{{ item }}</li>
+          </ul>
+        </section>
+
+        <div class="ai-review-footer">
+          <span>{{ t(`forecast.ai.confidence.${aiReview.confidence}`) }}</span>
+          <small>{{ aiReview.disclaimer }}</small>
+        </div>
+      </div>
+
+      <div v-else class="ai-review-empty">
+        <p>{{ aiError || t('forecast.ai.empty') }}</p>
+        <button class="secondary-button" type="button" :disabled="aiLoading" @click="loadAiReview">
+          {{ t('forecast.ai.retry') }}
+        </button>
       </div>
     </article>
 

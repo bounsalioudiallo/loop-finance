@@ -28,10 +28,8 @@ const navItems = computed(() => [
   { path: '/income/new', label: t('nav.income'), icon: CircleDollarSign },
 ]);
 
-const isDebtShareRoute = computed(() => route.path.startsWith('/debt/share'));
-const isOwnerPreview = computed(() => route.query.preview === 'owner');
-const showBottomNav = computed(() => route.path !== '/login' && (!isDebtShareRoute.value || isOwnerPreview.value));
-const showTopActions = computed(() => !isDebtShareRoute.value || isOwnerPreview.value);
+const showBottomNav = computed(() => route.path !== '/login');
+const showTopActions = computed(() => route.path !== '/login');
 
 const drawerItems = computed(() => [
   { path: '/settings', label: t('nav.settings'), description: t('drawer.settings'), icon: Settings },

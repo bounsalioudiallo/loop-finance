@@ -179,11 +179,135 @@ textarea {
   background: #fff3f0;
 }
 
-.auth-hero,
-.auth-panel {
-  max-width: 680px;
-  margin-right: auto;
-  margin-left: auto;
+.auth-screen {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.auth-intro {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.auth-intro h1 {
+  font-size: clamp(2.2rem, 11vw, 4rem);
+}
+
+.auth-intro p {
+  max-width: 620px;
+  margin-bottom: 0;
+}
+
+.auth-mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, #176b5c, #14221f),
+    #176b5c;
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(20, 34, 31, 0.16);
+}
+
+.auth-card {
+  display: grid;
+  gap: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(20, 34, 31, 0.08);
+}
+
+.auth-provider-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.auth-provider-button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: #14221f;
+  background: #ffffff;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.auth-provider-button svg,
+.auth-provider-button span {
+  flex: 0 0 auto;
+  color: #176b5c;
+}
+
+.auth-provider-button span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  background: #e8f2ee;
+  border-radius: 999px;
+}
+
+.auth-provider-button.active {
+  border-color: rgba(23, 107, 92, 0.32);
+  background: #e8f2ee;
+}
+
+.auth-provider-button.google {
+  color: #3c4043;
+  border-color: #dadce0;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.18);
+}
+
+.auth-provider-button.google:hover:not(:disabled) {
+  background: #f8fafd;
+  border-color: #d2e3fc;
+  box-shadow:
+    0 1px 2px rgba(60, 64, 67, 0.2),
+    0 1px 3px rgba(60, 64, 67, 0.12);
+}
+
+.auth-provider-button.google:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.auth-provider-button.google .google-icon {
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border-radius: 0;
+}
+
+.auth-provider-button.google .google-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.auth-method-form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+.auth-message {
+  margin: 0;
 }
 
 .debt-form-panel {
@@ -523,6 +647,110 @@ label span {
   align-items: baseline;
   justify-content: space-between;
   gap: 14px;
+}
+
+.ai-review-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-review-panel .panel-heading {
+  margin-bottom: 0;
+}
+
+.ai-review-panel .eyebrow {
+  margin-bottom: 4px;
+}
+
+.ai-review-content {
+  display: grid;
+  gap: 14px;
+}
+
+.ai-review-loading,
+.ai-review-empty {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  color: #52635f;
+  background: #f7faf8;
+  border: 1px solid rgba(20, 34, 31, 0.08);
+  border-radius: 8px;
+}
+
+.ai-review-empty p {
+  margin: 0;
+}
+
+.ai-review-summary,
+.ai-review-section {
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+}
+
+.ai-review-summary h3,
+.ai-review-section h3 {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.ai-review-summary p {
+  margin-bottom: 0;
+}
+
+.ai-review-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-review-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-review-section-heading h3 {
+  margin-bottom: 0;
+}
+
+.ai-review-positive svg {
+  color: #176b5c;
+}
+
+.ai-review-risk svg {
+  color: #9a6a08;
+}
+
+.ai-review-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #52635f;
+  line-height: 1.45;
+}
+
+.ai-review-footer {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  color: #52635f;
+  background: #f7faf8;
+  border-radius: 8px;
+}
+
+.ai-review-footer span {
+  color: #176b5c;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ai-review-footer small {
+  line-height: 1.45;
 }
 
 .progress {
@@ -1051,6 +1279,342 @@ textarea {
   gap: 8px;
 }
 
+.debt-space-layout,
+.debt-board {
+  display: grid;
+  gap: 16px;
+}
+
+.debt-auth-state,
+.invite-screen {
+  width: min(100%, 620px);
+  margin: 0 auto;
+}
+
+.debt-space-form {
+  display: grid;
+  gap: 18px;
+}
+
+.debt-space-form-title,
+.debt-space-section-heading,
+.debt-board-top,
+.note-compare-author,
+.note-compare-footer,
+.debt-space-card-main,
+.debt-space-card-footer,
+.debt-invite-result,
+.invite-trust-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.debt-space-form-title,
+.debt-space-section-heading,
+.debt-board-top,
+.note-compare-author,
+.note-compare-footer,
+.debt-space-card-footer {
+  justify-content: space-between;
+}
+
+.debt-space-form-title h2,
+.debt-space-section-heading h2,
+.debt-board-top h1 {
+  margin: 0;
+}
+
+.debt-space-section-heading {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(20, 34, 31, 0.1);
+}
+
+.debt-space-section-heading.flush {
+  margin: -18px -18px 0;
+  padding: 14px 18px;
+  background: #f6faf7;
+}
+
+.debt-space-section-heading > span {
+  display: grid;
+  min-width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #176b5c;
+  background: #e8f2ee;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.debt-invite-result {
+  min-width: 0;
+  padding: 12px;
+  background: #f6faf7;
+  border: 1px solid rgba(23, 107, 92, 0.16);
+  border-radius: 8px;
+}
+
+.debt-invite-result span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  color: #52635f;
+  font-size: 0.88rem;
+}
+
+.debt-space-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.debt-space-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  color: #14221f;
+  background: #ffffff;
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 16px 42px rgba(20, 34, 31, 0.05);
+}
+
+.debt-space-icon,
+.invite-mark {
+  display: grid;
+  place-items: center;
+  color: #176b5c;
+  background: #e8f2ee;
+  border-radius: 8px;
+}
+
+.debt-space-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.debt-space-card-main small,
+.debt-space-card-footer,
+.debt-space-card-metrics span,
+.debt-board-top span,
+.note-compare-author span,
+.note-compare-footer small,
+.debt-timeline-row small {
+  color: #66736f;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.debt-space-card-main strong {
+  display: block;
+}
+
+.debt-space-card-metrics {
+  display: grid;
+  gap: 3px;
+}
+
+.debt-space-card-metrics strong {
+  font-size: 1.55rem;
+}
+
+.debt-board-top {
+  align-items: flex-start;
+}
+
+.debt-board-top > div {
+  flex: 1;
+}
+
+.debt-board-summary,
+.debt-board-grid,
+.note-compare-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.debt-board-summary {
+  grid-template-columns: 1.3fr repeat(2, minmax(0, 0.85fr));
+}
+
+.debt-board-balance,
+.debt-board-stat,
+.note-compare-panel,
+.note-compare-card,
+.debt-entry-form,
+.debt-timeline-panel {
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 46px rgba(20, 34, 31, 0.06);
+}
+
+.debt-board-balance {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.debt-board-balance strong {
+  font-size: clamp(2rem, 10vw, 3.1rem);
+  line-height: 1;
+}
+
+.debt-board-stat {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+  padding: 16px;
+}
+
+.debt-board-stat svg {
+  color: #176b5c;
+}
+
+.debt-board-stat span {
+  color: #66736f;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.debt-board-stat strong {
+  font-size: 1.1rem;
+}
+
+.note-compare-panel,
+.debt-timeline-panel {
+  overflow: hidden;
+}
+
+.note-compare-panel .debt-space-section-heading,
+.debt-timeline-panel .debt-space-section-heading {
+  padding: 14px 16px;
+  background: #f6faf7;
+}
+
+.note-compare-grid {
+  padding: 12px;
+}
+
+.note-compare-card {
+  display: grid;
+  gap: 14px;
+  min-height: 210px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(232, 242, 238, 0.65), rgba(255, 255, 255, 0)),
+    #ffffff;
+}
+
+.note-compare-card.mine {
+  border-color: rgba(23, 107, 92, 0.28);
+}
+
+.note-compare-author svg {
+  color: #176b5c;
+}
+
+.note-original {
+  margin: 0;
+  color: #14221f;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.debt-board-grid {
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+}
+
+.debt-entry-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.debt-timeline {
+  display: grid;
+}
+
+.debt-timeline-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+}
+
+.debt-timeline-row + .debt-timeline-row {
+  border-top: 1px solid #edf2ef;
+}
+
+.debt-timeline-row p {
+  margin: 4px 0;
+  color: #52635f;
+}
+
+.debt-timeline-row > span {
+  color: #176b5c;
+  font-weight: 900;
+}
+
+.debt-timeline-marker {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #176b5c;
+  background: #e8f2ee;
+  border-radius: 999px;
+}
+
+.debt-timeline-marker.payment {
+  color: #9a6a08;
+  background: #fff8e7;
+}
+
+.invite-screen {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 28px 18px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(20, 34, 31, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(20, 34, 31, 0.06);
+}
+
+.invite-mark {
+  width: 58px;
+  height: 58px;
+}
+
+.invite-screen h1,
+.invite-screen p {
+  margin: 0;
+}
+
+.invite-trust-row {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.invite-trust-row span {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  color: #176b5c;
+  background: #e8f2ee;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 @media (max-width: 520px) {
   .share-workbook {
     padding: 12px 10px 42px;
@@ -1082,6 +1646,27 @@ textarea {
     padding-left: 46px;
     text-align: left;
   }
+
+  .debt-space-form-title,
+  .debt-board-top,
+  .debt-invite-result {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .debt-board-summary,
+  .debt-board-grid,
+  .note-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-timeline-row {
+    grid-template-columns: auto 1fr;
+  }
+
+  .debt-timeline-row > span {
+    grid-column: 2;
+  }
 }
 
 @media (min-width: 760px) {
@@ -1106,6 +1691,24 @@ textarea {
 
   .scenario-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .note-compare-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-screen {
+    grid-template-columns: 0.9fr 1fr;
+    align-items: center;
+    min-height: min(640px, calc(100vh - 190px));
+  }
+
+  .auth-provider-grid {
+    grid-template-columns: 1fr;
   }
 
   .bottom-nav {

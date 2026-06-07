@@ -8,7 +8,8 @@ import AllocationView from '@/views/AllocationView.vue';
 import RulesView from '@/views/RulesView.vue';
 import LoginView from '@/views/LoginView.vue';
 import SettingsView from '@/views/SettingsView.vue';
-import DebtShareView from '@/views/DebtShareView.vue';
+import DebtInviteView from '@/views/DebtInviteView.vue';
+import DebtSpaceView from '@/views/DebtSpaceView.vue';
 import ForecastView from '@/views/ForecastView.vue';
 
 export const router = createRouter({
@@ -21,7 +22,8 @@ export const router = createRouter({
     { path: '/allocate/:incomeId', name: 'allocate', component: AllocationView },
     { path: '/goals', name: 'goals', component: GoalsView },
     { path: '/debts', name: 'debts', component: DebtsView },
-    { path: '/debt/share/:shareId', name: 'debt-share', component: DebtShareView },
+    { path: '/debts/:spaceId', name: 'debt-space', component: DebtSpaceView },
+    { path: '/debt/invite/:spaceId', name: 'debt-invite', component: DebtInviteView },
     { path: '/rules', name: 'rules', component: RulesView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/settings', name: 'settings', component: SettingsView },

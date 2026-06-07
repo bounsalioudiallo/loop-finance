@@ -21,7 +21,10 @@ const metrics = computed(() => [
   { label: t('dashboard.incomeThisMonth'), value: money.value.format(store.incomeThisMonth.value) },
   { label: t('dashboard.allocated'), value: money.value.format(store.allocated.value) },
   { label: t('dashboard.remaining'), value: money.value.format(remaining.value) },
-  { label: t('dashboard.healthScore'), value: `${store.healthScore.value} / 100` },
+  {
+    label: t('dashboard.healthScore'),
+    value: store.healthScore.value === null ? t('dashboard.healthScoreEmpty') : `${store.healthScore.value} / 100`,
+  },
 ]);
 
 const upcoming = computed(() => {

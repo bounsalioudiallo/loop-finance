@@ -304,7 +304,7 @@ The AI simulates future states and returns actionable answers.
 | Backend Logic | Firebase Cloud Functions |
 | Auth | Firebase Authentication |
 | Push Notifications | Firebase Cloud Messaging (for Money Arrival alerts) |
-| AI | Claude API (allocation engine + assistant) |
+| AI | DeepSeek API via Firebase Cloud Functions (allocation explanations + assistant) |
 
 ---
 
