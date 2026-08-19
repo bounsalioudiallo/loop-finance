@@ -1,11 +1,8 @@
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import {
-  type ConfirmationResult,
-  GoogleAuthProvider,
-  RecaptchaVerifier,
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPhoneNumber,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -19,8 +16,7 @@ interface AuthState {
   email: string;
 }
 
-const storageKey = 'loop-auth-state-v1';
-
+const storageKey = 'loop-debts-auth-v1';
 const defaultState: AuthState = {
   isAuthenticated: false,
   uid: '',
@@ -30,121 +26,82 @@ const defaultState: AuthState = {
 
 function loadState() {
   const saved = localStorage.getItem(storageKey);
-  return saved ? ({ ...defaultState, ...JSON.parse(saved) } as AuthState) : { ...defaultState };
+  if (!saved) return { ...defaultState };
+
+  try {
+    return { ...defaultState, ...JSON.parse(saved) } as AuthState;
+  } catch {
+    return { ...defaultState };
+  }
 }
 
 const state = reactive<AuthState>(loadState());
-let authReady = false;
-let phoneConfirmation: ConfirmationResult | null = null;
+const isReady = ref(false);
+let authObserverStarted = false;
 
 watch(
   state,
-  (nextState) => {
-    localStorage.setItem(storageKey, JSON.stringify(nextState));
-  },
+  (nextState) => localStorage.setItem(storageKey, JSON.stringify(nextState)),
   { deep: true },
 );
 
+function applyUser(user: { uid: string; displayName: string | null; email: string | null }) {
+  state.uid = user.uid;
+  state.displayName = user.displayName || user.email?.split('@')[0] || 'Loop user';
+  state.email = user.email || '';
+  state.isAuthenticated = true;
+}
+
 export function useAuthStore() {
   const initials = computed(() => {
-    if (state.displayName.trim()) {
-      return state.displayName
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase();
-    }
-
-    return state.email.slice(0, 2).toUpperCase() || 'LF';
+    const source = state.displayName.trim() || state.email.split('@')[0] || 'LD';
+    return source
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
   });
 
-  async function signIn(input: { displayName?: string; email: string; password: string }) {
-    const email = input.email.trim();
-    const password = input.password;
-    const fallbackName = input.displayName?.trim() || email.split('@')[0] || 'Loop user';
+  async function signIn(input: { email: string; password: string }) {
+    const email = input.email.trim().toLowerCase();
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      state.uid = credential.user.uid;
-      state.displayName = credential.user.displayName || fallbackName;
-      state.email = credential.user.email || email;
-      state.isAuthenticated = true;
-    } catch {
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      state.uid = credential.user.uid;
-      state.displayName = credential.user.displayName || fallbackName;
-      state.email = credential.user.email || email;
-      state.isAuthenticated = true;
+      const credential = await signInWithEmailAndPassword(auth, email, input.password);
+      applyUser(credential.user);
+      isReady.value = true;
+    } catch (signInError) {
+      try {
+        const credential = await createUserWithEmailAndPassword(auth, email, input.password);
+        applyUser(credential.user);
+        isReady.value = true;
+      } catch (createError) {
+        throw createError instanceof Error ? createError : signInError;
+      }
     }
-  }
-
-  async function signInWithGoogle() {
-    const credential = await signInWithPopup(auth, new GoogleAuthProvider());
-    state.uid = credential.user.uid;
-    state.displayName = credential.user.displayName || credential.user.email?.split('@')[0] || 'Loop user';
-    state.email = credential.user.email || '';
-    state.isAuthenticated = true;
-  }
-
-  async function sendPhoneCode(phoneNumber: string) {
-    let verifier = window.recaptchaVerifier;
-
-    if (!verifier) {
-      verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
-      window.recaptchaVerifier = verifier;
-    }
-
-    phoneConfirmation = await signInWithPhoneNumber(auth, phoneNumber.trim(), verifier);
-  }
-
-  async function confirmPhoneCode(code: string) {
-    if (!phoneConfirmation) {
-      throw new Error('Verification code has not been requested.');
-    }
-
-    const credential = await phoneConfirmation.confirm(code.trim());
-    state.uid = credential.user.uid;
-    state.displayName = credential.user.phoneNumber || 'Loop user';
-    state.email = credential.user.email || '';
-    state.isAuthenticated = true;
   }
 
   async function signOut() {
     await firebaseSignOut(auth);
     Object.assign(state, defaultState);
+    localStorage.removeItem(storageKey);
+    isReady.value = true;
   }
 
-  if (!authReady) {
-    authReady = true;
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        Object.assign(state, defaultState);
-        return;
-      }
+  async function signInWithGoogle() {
+    const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+    applyUser(credential.user);
+    isReady.value = true;
+  }
 
-      state.uid = user.uid;
-      state.displayName = user.displayName || user.email?.split('@')[0] || 'Loop user';
-      state.email = user.email || '';
-      state.isAuthenticated = true;
+  if (!authObserverStarted) {
+    authObserverStarted = true;
+    onAuthStateChanged(auth, (user) => {
+      if (user) applyUser(user);
+      else Object.assign(state, defaultState);
+      isReady.value = true;
     });
   }
 
-  return {
-    state,
-    initials,
-    signIn,
-    signInWithGoogle,
-    sendPhoneCode,
-    confirmPhoneCode,
-    signOut,
-  };
-}
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-  }
+  return { state, initials, isReady, signIn, signInWithGoogle, signOut };
 }

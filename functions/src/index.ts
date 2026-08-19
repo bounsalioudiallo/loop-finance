@@ -1,289 +1,174 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { createHash, randomBytes } from 'node:crypto';
 import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-import { createHash, randomBytes } from 'node:crypto';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
 initializeApp();
 
 const db = getFirestore();
-const deepSeekModel = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
+const INVITE_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const INVITE_CODE_LENGTH = 6;
+const INVITE_CODE_TTL_MS = 24 * 60 * 60 * 1000;
 
-interface AiReview {
-  summary: string;
-  positives: string[];
-  risks: string[];
-  suggestedActions: string[];
-  confidence: 'low' | 'medium' | 'high';
-  disclaimer: string;
-}
-
-interface AiReviewFallback {
-  summary: string;
-  positives: string[];
-  risks: string[];
-  suggestedActions: string[];
-  disclaimer: string;
-}
-
-const allocationReviewFallback: AiReviewFallback = {
-  summary: 'Loop reviewed this allocation against your rules, debts, and active goals.',
-  positives: ['Required rules and debt minimums stay protected.'],
-  risks: ['Review the plan if your next income date is uncertain.'],
-  suggestedActions: ['Approve only if these allocations match your current priorities.'],
-  disclaimer: 'AI can explain and suggest, but Loop uses the deterministic allocation plan as the source of truth.',
-};
-
-const forecastReviewFallback: AiReviewFallback = {
-  summary: 'Loop reviewed this forecast against your income pattern, goals, debts, and rules.',
-  positives: ['The forecast keeps deterministic numbers as the source of truth.'],
-  risks: ['Forecasts can shift when income timing or debt obligations change.'],
-  suggestedActions: ['Use this review as guidance, then adjust goals, debts, or rules directly in Loop.'],
-  disclaimer: 'AI can explain and suggest, but Loop uses deterministic forecast calculations as the source of truth.',
-};
-
-function hashInviteToken(token: string) {
-  return createHash('sha256').update(token.trim()).digest('hex');
-}
-
-function normalizedString(value: unknown, fallback = '') {
+function cleanText(value: unknown, fallback = '') {
   return String(value || fallback).trim();
 }
 
-function normalizedNumber(value: unknown, fallback = 0) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : fallback;
+function normalizeInviteCode(value: unknown) {
+  return cleanText(value).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, INVITE_CODE_LENGTH);
 }
 
-function profileForRequest(request: { auth?: { uid: string; token?: Record<string, unknown> } | null }) {
+function hashInviteCode(code: string) {
+  return createHash('sha256').update(normalizeInviteCode(code)).digest('hex');
+}
+
+function randomInviteCode() {
+  const bytes = randomBytes(INVITE_CODE_LENGTH);
+  return Array.from(bytes, (byte) => INVITE_CODE_ALPHABET[byte % INVITE_CODE_ALPHABET.length]).join('');
+}
+
+async function createUniqueInviteCode() {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = randomInviteCode();
+    const collision = await db.collection('debtSpaces')
+      .where('inviteCodeHash', '==', hashInviteCode(code))
+      .limit(1)
+      .get();
+
+    if (collision.empty) return code;
+  }
+
+  throw new HttpsError('resource-exhausted', 'A new invitation code could not be created. Try again.');
+}
+
+function profileForRequest(request: { auth?: { token?: Record<string, unknown> } | null }) {
   const token = request.auth?.token || {};
+  const email = cleanText(token.email);
 
   return {
-    displayName: normalizedString(token.name, normalizedString(token.email, 'Loop user')),
-    email: normalizedString(token.email),
-    photoURL: normalizedString(token.picture),
+    displayName: cleanText(token.name, email.split('@')[0] || 'Loop user').slice(0, 120),
+    email: email.slice(0, 254),
+    photoURL: cleanText(token.picture).slice(0, 1000),
   };
 }
 
-function clampList(value: unknown, fallback: string[]) {
-  if (!Array.isArray(value)) return fallback;
-
-  return value
-    .map((item) => String(item || '').trim())
-    .filter(Boolean)
-    .slice(0, 4);
+function normalizedCurrency(value: unknown) {
+  const currency = cleanText(value, 'XAF').toUpperCase();
+  return /^[A-Z]{3}$/.test(currency) ? currency : 'XAF';
 }
 
-function normalizeAiReview(value: unknown, fallback: AiReviewFallback): AiReview {
-  const input = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {};
-  const confidence = ['low', 'medium', 'high'].includes(String(input.confidence))
-    ? String(input.confidence) as AiReview['confidence']
-    : 'medium';
-
-  return {
-    summary: String(input.summary || fallback.summary).slice(0, 500),
-    positives: clampList(input.positives, fallback.positives),
-    risks: clampList(input.risks, fallback.risks),
-    suggestedActions: clampList(input.suggestedActions, fallback.suggestedActions),
-    confidence,
-    disclaimer: String(input.disclaimer || fallback.disclaimer).slice(0, 300),
-  };
+function codeIsExpired(value: unknown) {
+  const expiresAt = Date.parse(cleanText(value));
+  return !Number.isFinite(expiresAt) || expiresAt <= Date.now();
 }
 
-function parseJsonObject(content: string) {
-  try {
-    return JSON.parse(content);
-  } catch {
-    const match = content.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('DeepSeek did not return JSON.');
-    return JSON.parse(match[0]);
+async function findSpaceForCode(inviteCode: string) {
+  const snapshot = await db.collection('debtSpaces')
+    .where('inviteCodeHash', '==', hashInviteCode(inviteCode))
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    throw new HttpsError('not-found', 'That invitation code is not valid.');
   }
+
+  const space = snapshot.docs[0];
+  if (codeIsExpired(space.data().inviteCodeExpiresAt)) {
+    throw new HttpsError('deadline-exceeded', 'That invitation code has expired. Ask for a new one.');
+  }
+
+  return space;
 }
-
-async function createDeepSeekReview(input: unknown, fallback: AiReviewFallback): Promise<AiReview> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-
-  if (!apiKey) {
-    throw new HttpsError('failed-precondition', 'DeepSeek API key is not configured.');
-  }
-
-  const response = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: deepSeekModel,
-      temperature: 0.2,
-      max_tokens: 1400,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: [
-            'You are Loop, a financial allocation assistant.',
-            'Return only valid JSON with keys: summary, positives, risks, suggestedActions, confidence, disclaimer.',
-            'positives, risks, and suggestedActions must be arrays of short plain-language strings.',
-            'Use at most 3 items in each array, and keep every string under 140 characters.',
-            'confidence must be low, medium, or high.',
-            'Do not change any financial data or calculations. Explain and suggest only.',
-            'Be clear, calm, practical, and bilingual when the locale is fr.',
-          ].join(' '),
-        },
-        {
-          role: 'user',
-          content: JSON.stringify(input),
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new HttpsError('unavailable', `DeepSeek request failed with ${response.status}: ${body.slice(0, 240)}`);
-  }
-
-  const data = await response.json() as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new HttpsError('internal', 'DeepSeek returned an empty response.');
-  }
-
-  return normalizeAiReview(parseJsonObject(content), fallback);
-}
-
-export const explainAllocation = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'Authentication is required.');
-  }
-
-  const { plan, context, locale } = request.data || {};
-
-  if (!plan || !Array.isArray(plan.lines)) {
-    throw new HttpsError('invalid-argument', 'An allocation plan with lines is required.');
-  }
-
-  return createDeepSeekReview(
-    {
-      task: 'allocation_review',
-      locale: locale === 'fr' ? 'fr' : 'en',
-      plan,
-      context,
-    },
-    allocationReviewFallback,
-  );
-});
-
-export const explainForecast = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'Authentication is required.');
-  }
-
-  const { forecast, context, locale } = request.data || {};
-
-  if (!forecast || !Array.isArray(forecast.scenarios)) {
-    throw new HttpsError('invalid-argument', 'A financial forecast with scenarios is required.');
-  }
-
-  return createDeepSeekReview(
-    {
-      task: 'forecast_review',
-      locale: locale === 'fr' ? 'fr' : 'en',
-      forecast,
-      context,
-      instructions: [
-        'Explain what the deterministic forecast means.',
-        'Identify goal, debt, or income risks.',
-        'Suggest practical next actions the user can take in Loop.',
-        'Do not invent transactions, balances, or exact predictions not present in the input.',
-      ],
-    },
-    forecastReviewFallback,
-  );
-});
 
 export const createDebtSpaceInvite = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Authentication is required.');
   }
 
-  const {
-    title,
-    counterpartyName,
-    currency,
-    principalAmount,
-    currentBalance,
-    minimumPayment,
-    interestRate,
-    firstPaymentDate,
-    paymentFrequency,
-    openingNote,
-  } = request.data || {};
-  const normalizedTitle = normalizedString(title, 'Shared debt');
-  const normalizedCounterparty = normalizedString(counterpartyName, 'Shared member');
-  const normalizedCurrency = normalizedString(currency, 'USD').slice(0, 6).toUpperCase();
-  const normalizedPrincipal = Math.max(0, normalizedNumber(principalAmount));
-  const normalizedBalance = Math.max(0, normalizedNumber(currentBalance, normalizedPrincipal));
-  const normalizedMinimum = Math.max(0, normalizedNumber(minimumPayment));
-  const normalizedInterest = Math.max(0, normalizedNumber(interestRate));
+  const existingSpaceId = cleanText(request.data?.spaceId);
+  const inviteCode = await createUniqueInviteCode();
+  const inviteCodeHash = hashInviteCode(inviteCode);
+  const now = new Date().toISOString();
+  const inviteCodeExpiresAt = new Date(Date.now() + INVITE_CODE_TTL_MS).toISOString();
 
-  if (!normalizedTitle || normalizedPrincipal <= 0) {
-    throw new HttpsError('invalid-argument', 'A title and principal amount are required.');
-  }
+  if (existingSpaceId) {
+    const spaceRef = db.collection('debtSpaces').doc(existingSpaceId);
 
-  const token = randomBytes(24).toString('base64url');
-  const createdAt = new Date().toISOString();
-  const spaceRef = db.collection('debtSpaces').doc();
-  const memberProfiles = {
-    [request.auth.uid]: {
-      ...profileForRequest(request),
-      role: 'creator',
-      joinedAt: createdAt,
-    },
-  };
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(spaceRef);
+      if (!snapshot.exists) throw new HttpsError('not-found', 'Shared debt not found.');
 
-  await db.runTransaction(async (transaction) => {
-    transaction.set(spaceRef, {
-      title: normalizedTitle.slice(0, 120),
-      counterpartyName: normalizedCounterparty.slice(0, 120),
-      currency: normalizedCurrency,
-      principalAmount: normalizedPrincipal,
-      currentBalance: normalizedBalance,
-      minimumPayment: normalizedMinimum,
-      interestRate: normalizedInterest,
-      firstPaymentDate: normalizedString(firstPaymentDate).slice(0, 20),
-      paymentFrequency: ['weekly', 'monthly', 'yearly'].includes(String(paymentFrequency))
-        ? String(paymentFrequency)
-        : 'monthly',
-      createdBy: request.auth!.uid,
-      memberIds: [request.auth!.uid],
-      memberProfiles,
-      inviteTokenHash: hashInviteToken(token),
-      inviteAcceptedBy: null,
-      createdAt,
-      updatedAt: createdAt,
+      const memberIds = Array.isArray(snapshot.data()?.memberIds)
+        ? snapshot.data()!.memberIds.map(String)
+        : [];
+
+      if (!memberIds.includes(request.auth!.uid)) {
+        throw new HttpsError('permission-denied', 'Only members can create an invitation.');
+      }
+      if (memberIds.length >= 2) {
+        throw new HttpsError('failed-precondition', 'This shared debt is already connected.');
+      }
+
+      transaction.set(spaceRef, { inviteCodeHash, inviteCodeExpiresAt, updatedAt: now }, { merge: true });
     });
 
-    const note = normalizedString(openingNote);
-    if (note) {
-      transaction.set(spaceRef.collection('entries').doc(), {
-        type: 'note',
-        authorId: request.auth!.uid,
-        authorName: memberProfiles[request.auth!.uid].displayName,
-        note: note.slice(0, 2000),
-        amount: null,
-        createdAt,
-      });
-    }
+    return { ok: true, spaceId: existingSpaceId, inviteCode, inviteCodeExpiresAt };
+  }
+
+  const counterpartyName = cleanText(request.data?.counterpartyName).slice(0, 120);
+  if (!counterpartyName) {
+    throw new HttpsError('invalid-argument', 'A person is required.');
+  }
+
+  const spaceRef = db.collection('debtSpaces').doc();
+  const creatorProfile = {
+    ...profileForRequest(request),
+    role: 'creator',
+    joinedAt: now,
+  };
+
+  await spaceRef.set({
+    title: counterpartyName,
+    counterpartyName,
+    currency: normalizedCurrency(request.data?.currency),
+    currentBalance: 0,
+    balanceByUser: { [request.auth.uid]: 0 },
+    createdBy: request.auth.uid,
+    memberIds: [request.auth.uid],
+    memberProfiles: { [request.auth.uid]: creatorProfile },
+    inviteCodeHash,
+    inviteCodeExpiresAt,
+    inviteAcceptedBy: null,
+    createdAt: now,
+    updatedAt: now,
   });
+
+  return { ok: true, spaceId: spaceRef.id, inviteCode, inviteCodeExpiresAt };
+});
+
+export const previewDebtSpaceInvite = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentication is required.');
+  }
+
+  const inviteCode = normalizeInviteCode(request.data?.inviteCode);
+  if (inviteCode.length !== INVITE_CODE_LENGTH) {
+    throw new HttpsError('invalid-argument', 'Enter the complete six-character code.');
+  }
+
+  const space = await findSpaceForCode(inviteCode);
+  const data = space.data();
+  const memberIds = Array.isArray(data.memberIds) ? data.memberIds.map(String) : [];
+
+  if (memberIds.length >= 2 && !memberIds.includes(request.auth.uid)) {
+    throw new HttpsError('failed-precondition', 'This shared debt is already connected.');
+  }
 
   return {
     ok: true,
-    spaceId: spaceRef.id,
-    inviteToken: token,
+    spaceId: space.id,
+    inviterName: cleanText(data.memberProfiles?.[data.createdBy]?.displayName, 'Someone'),
+    alreadyJoined: memberIds.includes(request.auth.uid),
   };
 });
 
@@ -292,44 +177,45 @@ export const acceptDebtSpaceInvite = onCall(async (request) => {
     throw new HttpsError('unauthenticated', 'Authentication is required.');
   }
 
-  const { spaceId, inviteToken } = request.data || {};
-  const normalizedSpaceId = normalizedString(spaceId);
-  const normalizedToken = normalizedString(inviteToken);
-
-  if (!normalizedSpaceId || !normalizedToken) {
-    throw new HttpsError('invalid-argument', 'Space ID and invite token are required.');
+  const inviteCode = normalizeInviteCode(request.data?.inviteCode);
+  if (inviteCode.length !== INVITE_CODE_LENGTH) {
+    throw new HttpsError('invalid-argument', 'Enter the complete six-character code.');
   }
 
-  const spaceRef = db.collection('debtSpaces').doc(normalizedSpaceId);
-  const acceptedAt = new Date().toISOString();
+  const foundSpace = await findSpaceForCode(inviteCode);
+  const spaceRef = foundSpace.ref;
+  const joinedAt = new Date().toISOString();
 
   await db.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(spaceRef);
-
-    if (!snapshot.exists) {
-      throw new HttpsError('not-found', 'Debt space not found.');
-    }
+    if (!snapshot.exists) throw new HttpsError('not-found', 'Shared debt not found.');
 
     const data = snapshot.data() || {};
     const memberIds = Array.isArray(data.memberIds) ? data.memberIds.map(String) : [];
 
-    if (data.inviteTokenHash !== hashInviteToken(normalizedToken)) {
-      throw new HttpsError('permission-denied', 'Invalid invite token.');
+    if (memberIds.includes(request.auth!.uid)) return;
+    if (memberIds.length >= 2) {
+      throw new HttpsError('failed-precondition', 'This shared debt is already connected.');
+    }
+    if (data.inviteCodeHash !== hashInviteCode(inviteCode) || codeIsExpired(data.inviteCodeExpiresAt)) {
+      throw new HttpsError('permission-denied', 'This invitation code is no longer valid.');
     }
 
-    const profile = {
-      ...profileForRequest(request),
-      role: memberIds.length === 0 ? 'creator' : 'member',
-      joinedAt: acceptedAt,
-    };
-
+    const creatorBalance = Number(data.balanceByUser?.[data.createdBy] || data.currentBalance || 0);
     transaction.set(spaceRef, {
       memberIds: FieldValue.arrayUnion(request.auth!.uid),
-      [`memberProfiles.${request.auth!.uid}`]: profile,
+      [`memberProfiles.${request.auth!.uid}`]: {
+        ...profileForRequest(request),
+        role: 'member',
+        joinedAt,
+      },
+      [`balanceByUser.${request.auth!.uid}`]: -creatorBalance,
+      inviteCodeHash: null,
+      inviteCodeExpiresAt: null,
       inviteAcceptedBy: request.auth!.uid,
-      updatedAt: acceptedAt,
+      updatedAt: joinedAt,
     }, { merge: true });
   });
 
-  return { ok: true };
+  return { ok: true, spaceId: spaceRef.id };
 });

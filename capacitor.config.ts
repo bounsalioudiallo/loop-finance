@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.loopfinance.app',
-  appName: 'Loop Finance',
+  appName: 'Loop Debts',
   webDir: 'dist',
   bundledWebRuntime: false,
   plugins: {
@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'dark',
-      backgroundColor: '#101820',
+      backgroundColor: '#fffdf8',
     },
   },
 };

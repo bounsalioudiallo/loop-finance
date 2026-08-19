@@ -6,38 +6,63 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
     function isDebtSpaceMember(spaceId) {
       return isSignedIn()
         && exists(/databases/$(database)/documents/debtSpaces/$(spaceId))
         && request.auth.uid in get(/databases/$(database)/documents/debtSpaces/$(spaceId)).data.memberIds;
     }
 
-    match /users/{userId}/private/{document=**} {
-      allow read, write: if isOwner(userId);
+    function validEntry(data) {
+      return data.keys().hasOnly([
+          'type',
+          'authorId',
+          'authorName',
+          'note',
+          'amount',
+          'direction',
+          'reasonCue',
+          'currencyCue',
+          'confidence',
+          'createdAt',
+          'createdAtServer',
+          'updatedAt'
+        ])
+        && data.type in ['money', 'note', 'payment', 'correction', 'agreement']
+        && data.authorId == request.auth.uid
+        && data.authorName is string
+        && data.authorName.size() <= 120
+        && data.note is string
+        && data.note.size() > 0
+        && data.note.size() <= 2000
+        && (data.amount == null || ((data.amount is int || data.amount is float) && data.amount >= 0))
+        && data.direction in ['theyOweMe', 'iOweThem', 'iPaidThem', 'theyPaidMe', 'neutral']
+        && data.reasonCue is string
+        && data.reasonCue.size() <= 120
+        && data.currencyCue is string
+        && data.currencyCue.size() <= 12
+        && data.confidence in ['low', 'medium', 'high']
+        && data.createdAt is string
+        && (!('updatedAt' in data) || data.updatedAt is string);
     }
 
     match /debtSpaces/{spaceId} {
       allow read: if isSignedIn() && request.auth.uid in resource.data.memberIds;
-      allow create: if false;
+      allow create, delete: if false;
       allow update: if isSignedIn()
         && request.auth.uid in resource.data.memberIds
-        && request.resource.data.memberIds == resource.data.memberIds
-        && request.resource.data.inviteTokenHash == resource.data.inviteTokenHash
-        && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if false;
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['balanceByUser', 'currentBalance', 'updatedAt']);
 
       match /entries/{entryId} {
         allow read: if isDebtSpaceMember(spaceId);
-        allow create: if isDebtSpaceMember(spaceId)
-          && request.resource.data.authorId == request.auth.uid
-          && request.resource.data.type in ['note', 'payment', 'correction', 'agreement'];
-        allow update, delete: if isDebtSpaceMember(spaceId)
+        allow create: if isDebtSpaceMember(spaceId) && validEntry(request.resource.data);
+        allow update: if isDebtSpaceMember(spaceId)
           && resource.data.authorId == request.auth.uid
-          && request.resource.data.authorId == resource.data.authorId;
+          && request.resource.data.authorId == resource.data.authorId
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['note', 'amount', 'direction', 'reasonCue', 'currencyCue', 'confidence', 'updatedAt'])
+          && validEntry(request.resource.data);
+        allow delete: if isDebtSpaceMember(spaceId) && resource.data.authorId == request.auth.uid;
       }
     }
 

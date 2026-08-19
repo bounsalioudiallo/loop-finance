@@ -1,49 +1,33 @@
-# Loop Finance
+# Loop Debts
 
-Loop is a mobile-first financial allocation app focused on assigning income before it is spent.
+Loop Debts is a focused mobile-first app for private debt notes shared between two people.
+
+The product has one flow:
+
+1. Log in with email and password.
+2. Accept an invitation or start a shared debt note.
+3. Add plain-language debt and payment entries.
+4. See the balance from each person's point of view.
 
 ## Stack
 
-- Vue 3 + Vite
-- TypeScript
-- Vue Router
-- vue-i18n for English and French
-- Firebase Auth, Firestore, Cloud Functions, and Hosting
-- Capacitor for iOS and Android apps
+- Vue 3, TypeScript, and Vite
+- Firebase Authentication and Firestore
+- Firebase callable functions for creating and accepting invitations
+- Capacitor configuration for native packaging
 
-## Getting Started
-
-Install dependencies:
+## Local development
 
 ```sh
 pnpm install
+pnpm dev
 ```
 
-Start the web app:
+Create `.env` from `.env.example` and provide the Firebase values.
+
+## Verification
 
 ```sh
-pnpm run dev
+pnpm build
+pnpm --dir functions build
 ```
-
-Build for production:
-
-```sh
-pnpm run build
-```
-
-Initialize native projects after dependencies are installed:
-
-```sh
-pnpm run cap:add:ios
-pnpm run cap:add:android
-```
-
-Sync web assets to native projects:
-
-```sh
-pnpm run cap:sync
-```
-
-## Environment
-
-Copy `.env.example` to `.env` and fill in the Firebase values.
